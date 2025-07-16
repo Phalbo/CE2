@@ -330,8 +330,8 @@ async function generateSongArchitecture() {
             timeSignatureChanges = [{ tick: 0, ts: [...activeTimeSignatureForSectionLogic] }];
         }
 
-        const songTitle = `Phalbo Caprice n ${capriceNumber}`;
-        const displaySongTitle = `Phalbo Caprice n ${capriceNumber}`;
+        const songTitle = generatePhalboTitle();
+        const displaySongTitle = songTitle;
         const styleNote = moodProfile.styleNotes || "Experiment.";
 
         currentMidiData = {
