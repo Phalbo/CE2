@@ -12,7 +12,6 @@
 *   **Bug Fixes:**
     *   Consolidated the `getWeightedRandom` function into a single, robust version in `theory-helpers.js` to fix a critical `TypeError`.
 
-
 ## Changelog (v2.23)
 
 *   **Arpeggiator Overhaul:**

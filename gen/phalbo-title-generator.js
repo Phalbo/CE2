@@ -2,7 +2,6 @@
 // Generatore di titoli casuali e surreali per CapricEngine.
 
 const phalboForms = [
-
   'Phalbo', 'el Phalbo', 'Phalbo-san', 'der Phalbo', 'il Phalbo', 'Phalbo.exe', 'Phalbo AI',
   'Capriccio di Phalbo', 'Phalbo in Love', 'Phalbo del Futuro', 'Signor Phalbo', 'Dr. Phalbo',
   'P. Halbo', 'Phalbo & Co.', 'Monsieur Phalbo', 'La mente di Phalbo', 'P_H4L80', 'Phalbo™',
@@ -155,7 +154,6 @@ const suffixes = [
   'The Grotesquerie of Glory', 'The Hallucination of Hope', 'The Hegemony of Hesitation', 'The Helix of Horror',
   'The Hermeneutics of Horror', 'The Heterotopia of Hindsight', 'The Hilarity of Horror', 'The Hologram of Happiness'
 ];
-
 
 function generatePhalboTitle() {
     if (typeof chance === 'undefined') {
