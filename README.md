@@ -1,4 +1,3 @@
-
 # CapricEngine v2.24
 
 ## Changelog (v2.24)
@@ -12,7 +11,6 @@
 *   **Enhanced Chord Glossary:** The initial view of a chord's fingering in the glossary is now randomized, offering more variety at first glance.
 *   **Bug Fixes:**
     *   Consolidated the `getWeightedRandom` function into a single, robust version in `theory-helpers.js` to fix a critical `TypeError`.
-
 
 ## Changelog (v2.23)
 
