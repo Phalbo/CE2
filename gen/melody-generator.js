@@ -67,7 +67,7 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
         console.warn("generateMelodyForSong: Impossibile mappare le note della scala a indici MIDI.");
         return melodyEvents;
     }
-    
+
     const minPitch = (MELODY_GENERATION_PARAMS.octaveBase - Math.floor(MELODY_GENERATION_PARAMS.octaveRange / 2)) * 12 + scaleNoteIndices[0];
     const maxPitch = minPitch + Math.ceil(MELODY_GENERATION_PARAMS.octaveRange * 12);
 
@@ -86,12 +86,13 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
         const sectionMelody = [];
 
         if (!sectionData.mainChordSlots || sectionData.mainChordSlots.length === 0) {
-            // Se non ci sono mainChordSlots (es. sezione di silenzio), non fare nulla per questa sezione.
             return;
         }
 
         sectionData.mainChordSlots.forEach(chordSlot => {
             const chordName = chordSlot.chordName;
+            // Calcola il tick di inizio assoluto dello slot sommando l'inizio della sezione e l'inizio relativo dello slot.
+            // Questo è il riferimento temporale centrale per tutti gli eventi generati in questo slot.
             const slotStartTickAbsolute = sectionData.startTick + chordSlot.effectiveStartTickInSection;
             const slotDurationTicks = chordSlot.effectiveDurationTicks;
 
@@ -110,117 +111,114 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
                     return pitch;
                 }).filter(p => p !== -1);
             }
-            
-            // Combina note della scala e note dell'accordo, dando priorità alle note dell'accordo
+
             let availableNotesForSlot = [...new Set([...chordToneIndices, ...scaleNoteIndices])].sort((a, b) => a - b);
             if (availableNotesForSlot.length === 0) {
-                availableNotesForSlot = [...scaleNoteIndices]; // Fallback alla scala se l'accordo non ha note mappabili
+                availableNotesForSlot = [...scaleNoteIndices];
             }
-            if (availableNotesForSlot.length === 0) return; // Ancora nessun suono, salta
+            if (availableNotesForSlot.length === 0) return;
 
 
             let currentTickInSlot = 0;
-            let attemptsInSlot = 0; // Per evitare loop infiniti se non si riesce a riempire lo slot
-            const maxAttemptsPerSlot = slotDurationTicks / MELODY_GENERATION_PARAMS.shortNoteDurationTicks * 2;
+            let attemptsInSlot = 0;
+            const maxAttemptsPerSlot = (slotDurationTicks / (TPQN_MELODY / 4)) * 2;
 
 
-          while (currentTickInSlot < slotDurationTicks && attemptsInSlot < maxAttemptsPerSlot) {
+            while (currentTickInSlot < slotDurationTicks && attemptsInSlot < maxAttemptsPerSlot) {
                 attemptsInSlot++;
+                const remainingTicksInSlot = slotDurationTicks - currentTickInSlot;
+                if (remainingTicksInSlot <= 0) break;
 
                 if (Math.random() < MELODY_GENERATION_PARAMS.restProbability && currentTickInSlot > 0) {
-                    // Inserisci una pausa ma evita che consumi l'intero slot
                     const restChoices = [MELODY_GENERATION_PARAMS.shortNoteDurationTicks, MELODY_GENERATION_PARAMS.mediumNoteDurationTicks];
                     let restDuration = getRandomElement_GLOBAL(restChoices);
-                    const remainingTicks = slotDurationTicks - currentTickInSlot;
-                    if (restDuration >= remainingTicks) {
-                        // Mantieni qualche tick per una nota finale, a meno di rara eccezione
-                        if (Math.random() > 0.2) {
-                            restDuration = Math.max(0, remainingTicks - MELODY_GENERATION_PARAMS.shortNoteDurationTicks);
-                        }
-                    }
-                    currentTickInSlot += Math.min(restDuration, remainingTicks);
-                    if (currentTickInSlot >= slotDurationTicks) break;
+                    restDuration = Math.min(restDuration, remainingTicksInSlot);
+                    currentTickInSlot += restDuration;
                     continue;
                 }
 
-                // Scegli un pattern ritmico
                 const rhythmicPatternTicks = getRandomElement_GLOBAL(MELODY_GENERATION_PARAMS.rhythmicVarietyPatterns)
-                                            .map(d => d * MELODY_GENERATION_PARAMS.shortNoteDurationTicks); // Converte in ticks
+                                            .map(d => d * MELODY_GENERATION_PARAMS.shortNoteDurationTicks);
 
                 let tickInRhythmicPattern = 0;
-                for (let noteDurationInTicks of rhythmicPatternTicks) {
-                    if (currentTickInSlot + tickInRhythmicPattern >= slotDurationTicks) break;
+                for (const noteDurationInTicks of rhythmicPatternTicks) {
+                    const currentRelativeTick = currentTickInSlot + tickInRhythmicPattern;
+                    if (currentRelativeTick >= slotDurationTicks) break;
 
-                    let actualNoteDuration = noteDurationInTicks;
-                    if (currentTickInSlot + tickInRhythmicPattern + actualNoteDuration > slotDurationTicks) {
-                        actualNoteDuration = slotDurationTicks - (currentTickInSlot + tickInRhythmicPattern);
-                    }
-                    if (actualNoteDuration < MELODY_GENERATION_PARAMS.shortNoteDurationTicks / 2) continue; // Durata troppo breve
+                    const actualNoteDuration = Math.min(noteDurationInTicks, slotDurationTicks - currentRelativeTick);
+                    if (actualNoteDuration < MELODY_GENERATION_PARAMS.shortNoteDurationTicks / 2) continue;
 
-                    // Scegli una nota
-                    let targetPitch;
+                    let targetPitch = null;
                     if (lastMelodyNotePitch !== null && Math.random() > MELODY_GENERATION_PARAMS.leapProbability) {
-                        // Prova movimento congiunto o piccolo salto
                         const possibleNextPitches = availableNotesForSlot.map(noteIdx => {
-                            // Considera note in diverse ottave vicine a lastMelodyNotePitch
                             const baseCandidate = noteIdx + MELODY_GENERATION_PARAMS.octaveBase * 12;
                             return [baseCandidate - 12, baseCandidate, baseCandidate + 12];
                         }).flat().filter(p => p >= minPitch && p <= maxPitch);
-                        
-                        let closestPitches = possibleNextPitches
+
+                        const closestPitches = possibleNextPitches
                             .map(p => ({ pitch: p, diff: Math.abs(p - lastMelodyNotePitch) }))
                             .filter(p => p.diff <= MELODY_GENERATION_PARAMS.maxStepInterval)
                             .sort((a, b) => a.diff - b.diff);
-                        
-                        targetPitch = closestPitches.length > 0 ? getRandomElement_GLOBAL(closestPitches.slice(0, Math.min(3, closestPitches.length))).pitch : null;
+
+                        if (closestPitches.length > 0) {
+                            targetPitch = getRandomElement_GLOBAL(closestPitches.slice(0, Math.min(3, closestPitches.length))).pitch;
+                        }
                     }
-                    
-                    if (!targetPitch) { // Se non trovato con movimento congiunto o è un salto
+
+                    if (targetPitch === null) {
                         const pitchCandidates = availableNotesForSlot.map(noteIdx => {
                             const baseCandidate = noteIdx + MELODY_GENERATION_PARAMS.octaveBase * 12;
-                             // Prova ottava base, una sopra, una sotto
-                            return [baseCandidate, baseCandidate + 12, baseCandidate -12];
+                            return [baseCandidate, baseCandidate + 12, baseCandidate - 12];
                         }).flat().filter(p => p >= minPitch && p <= maxPitch);
 
-                        targetPitch = pitchCandidates.length > 0 ? getRandomElement_GLOBAL(pitchCandidates) : null;
+                        if (pitchCandidates.length > 0) {
+                            targetPitch = getRandomElement_GLOBAL(pitchCandidates);
+                        }
                     }
 
                     if (targetPitch !== null) {
                         sectionMelody.push({
                             pitch: [targetPitch],
                             duration: `T${Math.round(actualNoteDuration)}`,
-                            startTick: slotStartTickAbsolute + currentTickInSlot + tickInRhythmicPattern,
-                            velocity: Math.floor(60 + Math.random() * 20) // Velocity variabile
+                            startTick: slotStartTickAbsolute + currentRelativeTick,
+                            velocity: Math.floor(60 + Math.random() * 20)
                         });
                         lastMelodyNotePitch = targetPitch;
                     }
                     tickInRhythmicPattern += actualNoteDuration;
                 }
-     currentTickInSlot += tickInRhythmicPattern;
-                if (rhythmicPatternTicks.length === 0) currentTickInSlot = slotDurationTicks; // Per uscire dal loop se il pattern è vuoto
-            }
-
-            // Riempie eventuali tick rimanenti nello slot con note brevi
-            while (currentTickInSlot < slotDurationTicks) {
-                const remaining = slotDurationTicks - currentTickInSlot;
-                const noteDur = Math.min(MELODY_GENERATION_PARAMS.shortNoteDurationTicks, remaining);
-                if (noteDur <= 0) break;
-
-                const pitchCandidates = availableNotesForSlot.map(idx => idx + MELODY_GENERATION_PARAMS.octaveBase * 12);
-                const targetPitch = getRandomElement_GLOBAL(pitchCandidates);
-                sectionMelody.push({
-                    pitch: [targetPitch],
-                    duration: `T${Math.round(noteDur)}`,
-                    startTick: slotStartTickAbsolute + currentTickInSlot,
-                    velocity: Math.floor(60 + Math.random() * 20)
-                });
-                lastMelodyNotePitch = targetPitch;
-                currentTickInSlot += noteDur;
+                currentTickInSlot += tickInRhythmicPattern;
+                if (tickInRhythmicPattern === 0) {
+                     currentTickInSlot = slotDurationTicks;
+                }
             }
         });
 
-        sectionCache.melody[baseName] = sectionMelody;
+        let finalTickInSection = 0;
+        if (sectionMelody.length > 0) {
+            const lastNote = sectionMelody[sectionMelody.length - 1];
+            const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+            finalTickInSection = (lastNote.startTick - sectionData.startTick) + lastNoteDuration;
+        }
+
+        const sectionDurationTicks = sectionData.measures * sectionData.timeSignature[0] * (4 / sectionData.timeSignature[1]) * TPQN_MELODY;
+
+        if (finalTickInSection < sectionDurationTicks && sectionMelody.length > 0) {
+            const remainingToFill = sectionDurationTicks - finalTickInSection;
+            const lastNote = sectionMelody[sectionMelody.length - 1];
+            const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+            lastNote.duration = `T${lastNoteDuration + remainingToFill}`;
+        }
+
         melodyEvents.push(...sectionMelody);
+
+        if (sectionMelody.length > 0) {
+            const cachedSectionMelody = sectionMelody.map(event => ({
+                ...event,
+                startTick: event.startTick - sectionData.startTick
+            }));
+            sectionCache.melody[baseName] = cachedSectionMelody;
+        }
     });
 
     return melodyEvents;

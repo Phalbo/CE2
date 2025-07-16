@@ -186,6 +186,8 @@ function generateDrumTrackForSong(
         let currentMainChordSlotIndex = -1;
 
         for (let barInSection = 0; barInSection < sectionMeasures; barInSection++) {
+            // Calcola il tick di inizio assoluto per questa misura, che funge da riferimento centrale
+            // per tutti gli eventi di batteria (pattern o fill) generati in questa iterazione.
             const barStartTickAbsolute = sectionStartTickAbsolute + (barInSection * currentTicksPerMeasure);
             let measureSpecificEventsMIDI = [];
             let isFillBar = false;
@@ -253,16 +255,12 @@ function generateDrumTrackForSong(
                 let currentMeasurePatternEventsRaw = JSON.parse(JSON.stringify(currentActivePattern.measureEvents || []));
 
                 if (currentActivePattern.variations && currentActivePattern.variations.length > 0 && randomActiveGlobal && !isFillBar) {
-                    // console.log("DEBUG DRUMS: Pattern:", currentActivePattern.name, "Attempting to apply variations. Variations available:", currentActivePattern.variations.length);
-                    currentActivePattern.variations.forEach(variation => { // RIGA 187 circa
+                    currentActivePattern.variations.forEach(variation => {
                         if (!variation) {
-                            console.warn("DRUM DEBUG (riga ~188): Oggetto 'variation' è undefined per pattern:", currentActivePattern.name);
                             return;
                         }
-                        // CONTROLLO E LOG ESPLICITI PRIMA DI CHIAMARE .apply()
-                        if (variation && typeof variation.apply === "function") { // RIGA 189 circa, inizio blocco if
+                        if (variation && typeof variation.apply === "function") {
                             if (Math.random() < (variation.probability || 0)) {
-                                // console.log("DEBUG DRUMS: Applying variation:", variation.name, "to pattern:", currentActivePattern.name);
                                 currentMeasurePatternEventsRaw = variation.apply(
                                     currentMeasurePatternEventsRaw,
                                     sectionBasePatternForSection,
@@ -277,18 +275,7 @@ function generateDrumTrackForSong(
                                 );
                             }
                         } else {
-                            console.error("Errore DRUM CRITICO (riga ~205): 'variation.apply' NON è una funzione o 'variation' è invalida.");
-                            console.log("DRUM DEBUG: Pattern attivo problematico:", currentActivePattern.name);
-                            console.log("DRUM DEBUG: Oggetto variation problematico:", variation);
-                            try {
-                                console.log("DRUM DEBUG: Struttura della variation problematica (parziale):", {
-                                    name: variation.name, // Potrebbe essere undefined se variation non è un oggetto
-                                    probability: variation.probability, // Potrebbe essere undefined
-                                    hasApplyMethod: typeof variation.apply // Sarà "undefined" se .apply non è una funzione
-                                });
-                            } catch (e) {
-                                console.log("DRUM DEBUG: Impossibile serializzare/loggare completamente la variation problematica.");
-                            }
+                            console.error("Errore DRUM CRITICO: 'variation.apply' NON è una funzione o 'variation' è invalida.");
                         }
                     });
                 }
@@ -329,7 +316,7 @@ function generateDrumTrackForSong(
                                 if ( (subDivisionsInBeat === 3 && stepWithinBeat === 1) ||
                                      (subDivisionsInBeat === 6 && (stepWithinBeat === 1 || stepWithinBeat === 4 ))
                                    ) {
-                                    eventTickAbsolute += ticksPerGridStep / 2; // Ritardo di mezzo step della griglia (1/3 di croma se grid=3 per beat)
+                                    eventTickAbsolute += ticksPerGridStep / 2;
                                 }
                             }
                         }
@@ -345,7 +332,15 @@ function generateDrumTrackForSong(
             }
             sectionDrumTrack.push(...measureSpecificEventsMIDI);
         }
-        sectionCache.drums[baseName] = sectionDrumTrack;
+
+        if (sectionDrumTrack.length > 0) {
+            const cachedSectionDrums = sectionDrumTrack.map(event => ({
+                ...event,
+                startTick: event.startTick - section.startTick
+            }));
+            sectionCache.drums[baseName] = cachedSectionDrums;
+        }
+
         drumEvents.push(...sectionDrumTrack);
     });
 

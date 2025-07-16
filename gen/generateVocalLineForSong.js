@@ -65,35 +65,6 @@ function selectActiveVocalStyle(passedGetRandomElementFunc_param) {
 }
 
 
-function getWeightedRandom(itemsWithProbabilities, passedGetRandomElementFunc_param) {
-    if (!itemsWithProbabilities || itemsWithProbabilities.length === 0) return null;
-
-    let totalProbability = 0;
-    const validItems = itemsWithProbabilities.filter(item => item && typeof item.probability === 'number' && item.probability >= 0);
-
-    if (validItems.length === 0) {
-        const nonUndefinedItems = itemsWithProbabilities.filter(i => i !== undefined && i !== null);
-        return nonUndefinedItems.length > 0 ? passedGetRandomElementFunc_param(nonUndefinedItems) : null;
-    }
-
-    for (const item of validItems) {
-        totalProbability += item.probability;
-    }
-
-    if (totalProbability === 0 && validItems.length > 0) { // Modificato per gestire somma probabilità 0 ma con items validi
-        return passedGetRandomElementFunc_param(validItems);
-    }
-    if (totalProbability === 0) return null; // Se non ci sono item validi o probabilità
-
-    let randomPoint = Math.random() * totalProbability;
-    for (const item of validItems) {
-        if (randomPoint < item.probability) {
-            return item;
-        }
-        randomPoint -= item.probability;
-    }
-    return validItems[validItems.length - 1]; // Fallback all'ultimo item valido
-}
 
 
 function getEffectiveScaleForStyle(mainScaleNotes, rootNoteOfScale, styleModePreference, scales_REF_param, NOTE_NAMES_CONST_REF_param, ALL_NOTES_WITH_FLATS_REF_param, passedGetNoteNameFunc_param) {
@@ -195,7 +166,7 @@ function selectNextStyledVocalPitch(
         let bestFitPitch = null;
         let smallestDiffToIdeal = Infinity;
 
-        const desiredIntervalItem = getWeightedRandom(style.interval_pattern, passedGetRandomElementFunc_param);
+        const desiredIntervalItem = getWeightedRandom(Object.fromEntries(style.interval_pattern.map((item, i) => [i, item])));
         let desiredIntervalSemitones = 0;
         let intervalType = "";
         if(desiredIntervalItem) {
@@ -289,7 +260,7 @@ function getStyledNoteDurationAndRest(currentTicksPerBeat, style, passedGetRando
 
     const rules = isNote ? (style.note_duration_rules || []) : (style.rest_rules || []);
     const defaultRule = isNote ? { duration_type: 'quarter', probability: 1 } : { duration_type: 'eighth', probability: 1 };
-    const chosenRule = getWeightedRandom(rules, passedGetRandomElementFunc_param) || defaultRule;
+    const chosenRule = getWeightedRandom(Object.fromEntries(rules.map((item, i) => [i, item]))) || defaultRule;
 
     let durationFactor = 1.0;
     let baseDurationType = chosenRule.duration_type || 'quarter';
@@ -516,6 +487,8 @@ function generateVocalLineForSong(
         }
 
         const sectionTimeSignature = section.timeSignature;
+        // section.startTick è il riferimento temporale assoluto per l'inizio di questa sezione.
+        // Tutti i tick calcolati all'interno della sezione devono essere relativi a questo valore.
         const sectionStartTickAbsolute = section.startTick;
         const currentTicksPerBeat = (4 / sectionTimeSignature[1]) * TPQN_VOCAL;
         const sectionTotalDurationTicks = section.measures * sectionTimeSignature[0] * currentTicksPerBeat;
@@ -635,17 +608,18 @@ function generateVocalLineForSong(
                     const rhythmElement = getStyledNoteDurationAndRest(currentTicksPerBeat, activeVocalStyle, passedGetRandomElementFunc, remainingTicksForThisEventAndRest);
                     let durationTicks = rhythmElement.duration;
 
+                    // Troncatura esplicita
+                    durationTicks = Math.min(durationTicks, remainingTicksForThisEventAndRest);
+
+
                     if (durationTicks <= 0 && rhythmElement.type === 'note') {
                         durationTicks = Math.max(1, Math.round(TPQN_VOCAL / 16));
-                        if (currentEventRelativeStartInChordSlot + durationTicks > actualChordDurationTicks) {
-                            durationTicks = actualChordDurationTicks - currentEventRelativeStartInChordSlot;
-                        }
+                        durationTicks = Math.min(durationTicks, remainingTicksForThisEventAndRest);
                     }
-                    if (durationTicks <= 0 && rhythmElement.type !== 'note') {
+                    if (durationTicks <= 0) {
                         ticksProcessedInCurrentChordSlot = actualChordDurationTicks;
                         break;
                     }
-                    if (durationTicks <= 0) break; // Sicurezza aggiuntiva
 
 
                     if (rhythmElement.type === 'note') {
@@ -696,8 +670,30 @@ function generateVocalLineForSong(
             firstChorusProcessed = true;
         }
 
-        sectionCache.vocal[baseName] = sectionVocalLine;
+        let finalTickInSection = 0;
+        if (sectionVocalLine.length > 0) {
+            const lastNote = sectionVocalLine[sectionVocalLine.length - 1];
+            const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+            finalTickInSection = (lastNote.startTick - section.startTick) + lastNoteDuration;
+        }
+
+        if (finalTickInSection < sectionTotalDurationTicks && sectionVocalLine.length > 0) {
+            const remainingToFill = sectionTotalDurationTicks - finalTickInSection;
+            const lastNote = sectionVocalLine[sectionVocalLine.length - 1];
+            const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+            lastNote.duration = `T${lastNoteDuration + remainingToFill}`;
+        }
+
+
         vocalEvents.push(...sectionVocalLine);
+
+        if (sectionVocalLine.length > 0) {
+             const cachedSectionVocal = sectionVocalLine.map(event => ({
+                ...event,
+                startTick: event.startTick - section.startTick
+            }));
+            sectionCache.vocal[baseName] = cachedSectionVocal;
+        }
     });
 
     if (vocalEvents.length > 1) {
