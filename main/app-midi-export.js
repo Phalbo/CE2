@@ -458,7 +458,9 @@ function handleGenerateBassLine() {
             getChordRootAndType,
             getChordNotes,
             getScaleNotes,
-            getRandomElement
+            getRandomElement,
+            getDiatonicChords,
+            NOTE_NAMES
         };
         const bassLine = generateBassLineForSong(currentMidiData, helpers);
         if (bassLine && bassLine.length > 0) {

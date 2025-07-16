@@ -65,7 +65,8 @@ function generateChordsForSection(
     allGeneratedChordsSet,
     measures,
     sectionTimeSignature,
-    progressionCache
+    progressionCache,
+    songData
 ) {
     if (!keyInfo || typeof keyInfo.root === 'undefined' || typeof keyInfo.mode === 'undefined') {
         console.error(`CRITICAL ERROR in generateChordsForSection: keyInfo è invalido o incompleto per la sezione "${sectionName}". Ricevuto keyInfo:`, keyInfo);
@@ -191,7 +192,7 @@ function generateChordsForSection(
         for (let i = 0; i < targetBaseProgressionLength; i++) baseProgressionDegrees.push(fallbackDeg);
     }
 
-    const finalBaseProgression = baseProgressionDegrees.map(degree => {
+    let finalBaseProgression = baseProgressionDegrees.map(degree => {
         if (typeof degree !== 'string' || degree.trim() === '') {
             const nf = normalizeChordNameToSharps(fallbackTonic);
             allGeneratedChordsSet.add(nf);
@@ -215,6 +216,22 @@ function generateChordsForSection(
         allGeneratedChordsSet.add(normalizedFinalChord);
         return normalizedFinalChord;
     });
+
+    if (songData && songData.enableModalInterchange && MOOD_PROFILES[mood]?.allowedModalBorrowing) {
+        const interchangeChords = getInterchangeChords(keyRoot, currentModeForDiatonicGeneration);
+        if (interchangeChords.length > 0) {
+            finalBaseProgression = finalBaseProgression.map(chord => {
+                if (Math.random() < 0.2) { // 20% di probabilità di sostituire l'accordo
+                    const randomInterchangeChord = getRandomElement(interchangeChords);
+                    if (randomInterchangeChord) {
+                        allGeneratedChordsSet.add(randomInterchangeChord.chord);
+                        return randomInterchangeChord.chord;
+                    }
+                }
+                return chord;
+            });
+        }
+    }
 
   if (progressionCache) {
         progressionCache[sectionCacheKey] = [...finalBaseProgression];
@@ -256,6 +273,7 @@ async function generateSongArchitecture() {
         const selectedKeyOptionValue = document.getElementById('keySelection').value;
         const forcedTimeSignatureValue = document.getElementById('forceTimeSignature').value;
         const selectedStructureTemplate = document.getElementById('songStructure') ? document.getElementById('songStructure').value : 'random';
+        const enableModalInterchange = document.getElementById('enableModalInterchange') ? document.getElementById('enableModalInterchange').checked : false;
 
 
 
@@ -319,7 +337,8 @@ async function generateSongArchitecture() {
             title: songTitle, displayTitle: displaySongTitle, bpm: bpm, timeSignatureChanges: [], sections: [],
             keySignatureRoot: selectedKey.root, keyModeName: selectedKey.mode,
             fullKeyName: selectedKey.name || (selectedKey.root + " " + selectedKey.mode),
-            capriceNum: capriceNumber, totalMeasures: 0, mainScaleNotes: [], mainScaleRoot: selectedKey.root
+            capriceNum: capriceNumber, totalMeasures: 0, mainScaleNotes: [], mainScaleRoot: selectedKey.root,
+            enableModalInterchange: enableModalInterchange
         };
 
         const allGeneratedChordsSet = new Set();
@@ -370,7 +389,7 @@ async function generateSongArchitecture() {
                 finalMeasures,
                 activeTimeSignatureForSectionLogic,
                 progressionCache,
-                { varyChance: 0.05 }
+                currentMidiData
             );
 
             rawMidiSectionsData.push({
