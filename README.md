@@ -1,4 +1,18 @@
-# CapricEngine v2.23
+
+# CapricEngine v2.24
+
+## Changelog (v2.24)
+
+*   **Surreal Title Generator:** Implemented a new Dada-inspired title generator (`phalbo-title-generator.js`) using extensive word libraries and `chance.js` for creative and unique song titles.
+*   **UI and Text Cleanup:**
+    *   Fully translated the UI and text file outputs to English.
+    *   Corrected the "Arpeggiator" button logic to prevent it from reverting to its old name.
+    *   Sanitized generated MIDI file names to be based on the new unique titles.
+    *   Removed obsolete sections from the generated text file for a cleaner output.
+*   **Enhanced Chord Glossary:** The initial view of a chord's fingering in the glossary is now randomized, offering more variety at first glance.
+*   **Bug Fixes:**
+    *   Consolidated the `getWeightedRandom` function into a single, robust version in `theory-helpers.js` to fix a critical `TypeError`.
+
 
 ## Changelog (v2.23)
 
