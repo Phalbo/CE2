@@ -516,6 +516,8 @@ function generateVocalLineForSong(
         }
 
         const sectionTimeSignature = section.timeSignature;
+        // section.startTick è il riferimento temporale assoluto per l'inizio di questa sezione.
+        // Tutti i tick calcolati all'interno della sezione devono essere relativi a questo valore.
         const sectionStartTickAbsolute = section.startTick;
         const currentTicksPerBeat = (4 / sectionTimeSignature[1]) * TPQN_VOCAL;
         const sectionTotalDurationTicks = section.measures * sectionTimeSignature[0] * currentTicksPerBeat;
@@ -635,17 +637,18 @@ function generateVocalLineForSong(
                     const rhythmElement = getStyledNoteDurationAndRest(currentTicksPerBeat, activeVocalStyle, passedGetRandomElementFunc, remainingTicksForThisEventAndRest);
                     let durationTicks = rhythmElement.duration;
 
+                    // Troncatura esplicita
+                    durationTicks = Math.min(durationTicks, remainingTicksForThisEventAndRest);
+
+
                     if (durationTicks <= 0 && rhythmElement.type === 'note') {
                         durationTicks = Math.max(1, Math.round(TPQN_VOCAL / 16));
-                        if (currentEventRelativeStartInChordSlot + durationTicks > actualChordDurationTicks) {
-                            durationTicks = actualChordDurationTicks - currentEventRelativeStartInChordSlot;
-                        }
+                        durationTicks = Math.min(durationTicks, remainingTicksForThisEventAndRest);
                     }
-                    if (durationTicks <= 0 && rhythmElement.type !== 'note') {
+                    if (durationTicks <= 0) {
                         ticksProcessedInCurrentChordSlot = actualChordDurationTicks;
                         break;
                     }
-                    if (durationTicks <= 0) break; // Sicurezza aggiuntiva
 
 
                     if (rhythmElement.type === 'note') {
@@ -696,8 +699,30 @@ function generateVocalLineForSong(
             firstChorusProcessed = true;
         }
 
-        sectionCache.vocal[baseName] = sectionVocalLine;
+        let finalTickInSection = 0;
+        if (sectionVocalLine.length > 0) {
+            const lastNote = sectionVocalLine[sectionVocalLine.length - 1];
+            const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+            finalTickInSection = (lastNote.startTick - section.startTick) + lastNoteDuration;
+        }
+
+        if (finalTickInSection < sectionTotalDurationTicks && sectionVocalLine.length > 0) {
+            const remainingToFill = sectionTotalDurationTicks - finalTickInSection;
+            const lastNote = sectionVocalLine[sectionVocalLine.length - 1];
+            const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+            lastNote.duration = `T${lastNoteDuration + remainingToFill}`;
+        }
+
+
         vocalEvents.push(...sectionVocalLine);
+
+        if (sectionVocalLine.length > 0) {
+             const cachedSectionVocal = sectionVocalLine.map(event => ({
+                ...event,
+                startTick: event.startTick - section.startTick
+            }));
+            sectionCache.vocal[baseName] = cachedSectionVocal;
+        }
     });
 
     if (vocalEvents.length > 1) {

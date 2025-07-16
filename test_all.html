@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Test All Generators</title>
+  <script src="lib/midiwriter.js"></script>
+</head>
+<body>
+  <h1>Test All Generators</h1>
+  <button id="testButton">Run All Tests</button>
+  <div id="results"></div>
+
+  <!-- Load Libraries -->
+  <script src="lib/config-music-data.js"></script>
+  <script src="lib/theory-helpers.js"></script>
+  <script src="lib/vocal_profiles.js"></script>
+  <script src="lib/drum-patterns-library.js"></script>
+
+  <!-- Load Generators -->
+  <script src="gen/melody-generator.js"></script>
+  <script src="gen/generateVocalLineForSong.js"></script>
+  <script src="gen/generateBassLineForSong.js"></script>
+  <script src="gen/generateDrumTrackForSong.js"></script>
+
+  <script>
+    document.getElementById('testButton').addEventListener('click', () => {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '';
+      console.clear();
+
+      // --- Mock Data ---
+      const songMidiData = {
+        keySignatureRoot: 'C',
+        keyModeName: 'Ionian',
+        sections: [
+          {
+            name: 'Verse 1',
+            measures: 4,
+            timeSignature: [4, 4],
+            startTick: 0,
+            mainChordSlots: [
+              { chordName: 'C', effectiveStartTickInSection: 0, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'G', effectiveStartTickInSection: 768, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'Am', effectiveStartTickInSection: 1536, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'F', effectiveStartTickInSection: 2304, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+            ],
+          },
+          {
+            name: 'Chorus 1',
+            measures: 4,
+            timeSignature: [4, 4],
+            startTick: 3072,
+            mainChordSlots: [
+              { chordName: 'C', effectiveStartTickInSection: 0, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'G', effectiveStartTickInSection: 768, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'Am', effectiveStartTickInSection: 1536, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'G', effectiveStartTickInSection: 2304, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+            ],
+          },
+            {
+            name: 'Verse 2', // Same name as Verse 1 to test caching
+            measures: 4,
+            timeSignature: [4, 4],
+            startTick: 6144,
+            mainChordSlots: [
+              { chordName: 'C', effectiveStartTickInSection: 0, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'G', effectiveStartTickInSection: 768, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'Am', effectiveStartTickInSection: 1536, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+              { chordName: 'F', effectiveStartTickInSection: 2304, effectiveDurationTicks: 768, timeSignature: [4, 4] },
+            ],
+          },
+        ],
+      };
+
+      const mainScaleNotes = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+      const mainScaleRoot = 'C';
+      const sectionCache = {};
+
+      const helpers = {
+        getChordNotes: getChordNotes,
+        getNoteName: getNoteName,
+        getRandomElement: (arr) => arr[Math.floor(Math.random() * arr.length)],
+        getChordRootAndType: getChordRootAndType,
+        getDiatonicChords: getDiatonicChords,
+        NOTE_NAMES: NOTE_NAMES,
+        CHORD_LIB_GLOBAL: CHORD_LIB,
+        scales_GLOBAL: scales,
+        allNotesWithFlats_GLOBAL: allNotesWithFlats,
+      };
+
+      // --- Run Tests ---
+      try {
+        // Melody
+        console.log('--- Testing Melody Generator ---');
+        const melodyEvents = generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, helpers.CHORD_LIB_GLOBAL, helpers.scales_GLOBAL, helpers.NOTE_NAMES, helpers.allNotesWithFlats_GLOBAL, helpers.getChordNotes, helpers.getNoteName, helpers.getRandomElement, helpers.getChordRootAndType, sectionCache);
+        console.log(`Generated ${melodyEvents.length} melody events.`);
+        resultsDiv.innerHTML += `<p>Melody Test: Generated ${melodyEvents.length} events. Check console for details.</p>`;
+        if (melodyEvents.length === 0) throw new Error("Melody generation failed, no events produced.");
+
+        // Vocal
+        console.log('--- Testing Vocal Generator ---');
+        const vocalEvents = generateVocalLineForSong(songMidiData, mainScaleNotes, mainScaleRoot, helpers.CHORD_LIB_GLOBAL, helpers.scales_GLOBAL, helpers.NOTE_NAMES, helpers.allNotesWithFlats_GLOBAL, helpers.getChordNotes, helpers.getNoteName, helpers.getRandomElement, helpers.getChordRootAndType, {}, sectionCache);
+        console.log(`Generated ${vocalEvents.length} vocal events.`);
+        resultsDiv.innerHTML += `<p>Vocal Test: Generated ${vocalEvents.length} events. Check console for details.</p>`;
+        if (vocalEvents.length === 0) throw new Error("Vocal generation failed, no events produced.");
+
+        // Bass
+        console.log('--- Testing Bass Generator ---');
+        const bassEvents = generateBassLineForSong(songMidiData, helpers, sectionCache);
+        console.log(`Generated ${bassEvents.length} bass events.`);
+        resultsDiv.innerHTML += `<p>Bass Test: Generated ${bassEvents.length} events. Check console for details.</p>`;
+        if (bassEvents.length === 0) throw new Error("Bass generation failed, no events produced.");
+
+        // Drums
+        console.log('--- Testing Drum Generator ---');
+        const drumEvents = generateDrumTrackForSong(songMidiData, 120, '4/4', {}, helpers.CHORD_LIB_GLOBAL, helpers.NOTE_NAMES, helpers.getRandomElement, {}, sectionCache);
+        console.log(`Generated ${drumEvents.length} drum events.`);
+        resultsDiv.innerHTML += `<p>Drum Test: Generated ${drumEvents.length} events. Check console for details.</p>`;
+        if (drumEvents.length === 0) throw new Error("Drum generation failed, no events produced.");
+
+        console.log('--- Caching Test ---');
+        console.log('Cache content:', sectionCache);
+        if(!sectionCache.melody['Verse'] || !sectionCache.vocal['Verse'] || !sectionCache.bass['Verse'] || !sectionCache.drums['Verse']) {
+            throw new Error("Caching test failed: Not all parts for 'Verse' were cached.");
+        }
+        resultsDiv.innerHTML += `<p><strong>All tests passed!</strong></p>`;
+
+
+      } catch (error) {
+        console.error('TEST FAILED:', error);
+        resultsDiv.innerHTML += `<p style="color: red;"><strong>TEST FAILED:</strong> ${error.message}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

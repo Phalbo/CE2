@@ -132,7 +132,7 @@ function generateBassPhraseForSlot(context, lastEvent, helpers) {
     const { chordName, durationTicks, timeSignature, songData, sectionIndex, slotIndex, forceRootOnDownbeat = true } = context;
     const { getChordRootAndType, getChordNotes, getRandomElement } = helpers;
     const phraseEvents = [];
-    const ticksPerBeat = (4 / timeSignature[1]) * TICKS_PER_QUARTER_NOTE_REFERENCE;
+    const ticksPerBeat = (4 / timeSignature[1]) * (typeof TICKS_PER_QUARTER_NOTE_REFERENCE !== 'undefined' ? TICKS_PER_QUARTER_NOTE_REFERENCE : 128);
     const tsKey = `${timeSignature[0]}/${timeSignature[1]}`;
     const patterns = BASS_RHYTHMIC_PATTERNS[tsKey] || BASS_RHYTHMIC_PATTERNS['4/4'];
     const selectedPattern = getRandomElement(patterns);
@@ -142,29 +142,41 @@ function generateBassPhraseForSlot(context, lastEvent, helpers) {
     rhythmPattern.forEach((patternElement, index) => {
         if (currentTick >= durationTicks) return;
 
-        const isFirstBeat = index === 0;
         const durationInTicks = patternElement.d * ticksPerBeat;
+        // Tronca la nota se sfora la durata dello slot
         const actualDuration = Math.min(durationInTicks, durationTicks - currentTick);
 
-        let pitch = getPitchFromSymbol(patternElement.p, {
-            chordName,
-            lastNote: phraseEvents.length > 0 ? phraseEvents[phraseEvents.length - 1] : lastEvent,
-            songData,
-            helpers
-        });
-
-        pitch = Math.max(BASS_PARAMS.PITCH_RANGE.min, Math.min(BASS_PARAMS.PITCH_RANGE.max, pitch));
+        if (actualDuration <= 0) return;
 
         if (patternElement.p !== 'rest') {
+            let pitch = getPitchFromSymbol(patternElement.p, {
+                chordName,
+                lastNote: phraseEvents.length > 0 ? phraseEvents[phraseEvents.length - 1] : lastEvent,
+                songData,
+                helpers
+            });
+
+            pitch = Math.max(BASS_PARAMS.PITCH_RANGE.min, Math.min(BASS_PARAMS.PITCH_RANGE.max, pitch));
+
             phraseEvents.push({
                 pitch: [pitch],
-                duration: `T${actualDuration}`,
+                duration: `T${Math.round(actualDuration)}`,
+                // context.startTick contiene già il tick di inizio assoluto dello slot.
+                // Aggiungiamo il tick relativo all'interno dello slot per ottenere la posizione finale.
                 startTick: context.startTick + currentTick,
                 velocity: 75 + Math.floor(Math.random() * 10)
             });
         }
         currentTick += actualDuration;
     });
+
+    // Se il pattern non ha riempito l'intero slot, allunga l'ultima nota
+    if (currentTick < durationTicks && phraseEvents.length > 0) {
+        const lastNote = phraseEvents[phraseEvents.length - 1];
+        const lastNoteDuration = parseInt(lastNote.duration.substring(1), 10);
+        const remainingTicks = durationTicks - currentTick;
+        lastNote.duration = `T${lastNoteDuration + remainingTicks}`;
+    }
 
     return phraseEvents;
 }
@@ -260,7 +272,14 @@ function generateBassLineForSong(songData, helpers, sectionCache) {
             sectionBassLine.push(...phrase);
         });
 
-        sectionCache.bass[baseName] = sectionBassLine;
+        if (sectionBassLine.length > 0) {
+            const cachedSectionBass = sectionBassLine.map(event => ({
+                ...event,
+                startTick: event.startTick - section.startTick
+            }));
+            sectionCache.bass[baseName] = cachedSectionBass;
+        }
+
         bassLine.push(...sectionBassLine);
     });
 
