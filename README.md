@@ -1,5 +1,12 @@
-# CapricEngine v2.20
+# CapricEngine v2.21
 
+
+## Changelog (v2.21)
+
+*   **Modal Interchange:** Implemented an optional modal interchange feature that allows the generator to borrow chords from parallel modes. This can be enabled or disabled in the UI.
+*   **Bassline Improvements:**
+    *   The bassline generator now has a higher minimum note range to prevent notes from going too low.
+    *   Added a library of new rhythmic patterns for the bassline, increasing its variety.
 
 ## Changelog (v2.20) 
 
