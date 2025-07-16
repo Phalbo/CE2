@@ -249,9 +249,11 @@ function handleGenerateChordRhythm() {
         });
 
         if (allRhythmicChordEvents && allRhythmicChordEvents.length > 0) {
+
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Arpeggio.mid`;
             downloadSingleTrackMidi(
                 `Arpeggio for ${currentMidiData.title}`,
+
                 allRhythmicChordEvents,
                 fileName,
                 currentMidiData.bpm,
