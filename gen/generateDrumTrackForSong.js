@@ -12,6 +12,11 @@ if (typeof require !== 'undefined') {
 
 
 
+function normalizeSectionName(name) {
+  // Rimuove numeri finali tipo "Verse 1" → "Verse"
+  return name.replace(/\s*\d+$/, '').trim();
+}
+
 function generateDrumTrackForSong(
     songMidiData, // Contiene .sections (con .mainChordSlots), .bpm, .timeSignatureChanges
     bpm,
@@ -20,12 +25,18 @@ function generateDrumTrackForSong(
     CHORD_LIB_REF,
     NOTE_NAMES_CONST_REF,
     passedGetRandomElementFunc,
-    options = {}
+    options = {},
+    sectionCache
 ) {
     if (!songMidiData || !songMidiData.sections || songMidiData.sections.length === 0) {
         console.error("generateDrumTrackForSong: songMidiData.sections è mancante o vuoto.");
         throw new Error("generateDrumTrackForSong: songMidiData.sections è mancante o vuoto.");
     }
+
+    if (!sectionCache.drums) {
+        sectionCache.drums = {};
+    }
+
     if (typeof bpm !== 'number' || bpm <= 0) {
         console.error("generateDrumTrackForSong: bpm non valido.");
         throw new Error("generateDrumTrackForSong: bpm non valido.");
@@ -69,6 +80,17 @@ function generateDrumTrackForSong(
     let lastSectionType = null;
 
     songMidiData.sections.forEach(section => {
+        const baseName = normalizeSectionName(section.name);
+        if (sectionCache.drums[baseName]) {
+            const cachedDrumTrack = sectionCache.drums[baseName];
+            cachedDrumTrack.forEach(event => {
+                drumEvents.push({ ...event, startTick: event.startTick + section.startTick });
+            });
+            return;
+        }
+
+        const sectionDrumTrack = [];
+
         if (!section || !section.timeSignature || typeof section.startTick === 'undefined' || !section.mainChordSlots) {
             console.warn("generateDrumTrackForSong: Sezione malformata o senza mainChordSlots, la salto:", section.name);
             return;
@@ -321,8 +343,10 @@ function generateDrumTrackForSong(
                     });
                 });
             }
-            drumEvents.push(...measureSpecificEventsMIDI);
+            sectionDrumTrack.push(...measureSpecificEventsMIDI);
         }
+        sectionCache.drums[baseName] = sectionDrumTrack;
+        drumEvents.push(...sectionDrumTrack);
     });
 
     drumEvents.sort((a, b) => a.startTick - b.startTick);

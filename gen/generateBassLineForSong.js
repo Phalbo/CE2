@@ -218,11 +218,31 @@ function getPitchFromSymbol(symbol, context) {
     }
 }
 
-function generateBassLineForSong(songData, helpers) {
+function normalizeSectionName(name) {
+  // Rimuove numeri finali tipo "Verse 1" → "Verse"
+  return name.replace(/\s*\d+$/, '').trim();
+}
+
+function generateBassLineForSong(songData, helpers, sectionCache) {
     const bassLine = [];
     let lastEvent = null;
 
+    if (!sectionCache.bass) {
+        sectionCache.bass = {};
+    }
+
     songData.sections.forEach((section, sectionIndex) => {
+        const baseName = normalizeSectionName(section.name);
+        if (sectionCache.bass[baseName]) {
+            const cachedBassLine = sectionCache.bass[baseName];
+            cachedBassLine.forEach(event => {
+                bassLine.push({ ...event, startTick: event.startTick + section.startTick });
+            });
+            return;
+        }
+
+        const sectionBassLine = [];
+
         section.mainChordSlots.forEach((slot, slotIndex) => {
             const context = {
                 chordName: slot.chordName,
@@ -237,8 +257,11 @@ function generateBassLineForSong(songData, helpers) {
             if (phrase.length > 0) {
                 lastEvent = phrase[phrase.length - 1];
             }
-            bassLine.push(...phrase);
+            sectionBassLine.push(...phrase);
         });
+
+        sectionCache.bass[baseName] = sectionBassLine;
+        bassLine.push(...sectionBassLine);
     });
 
     return bassLine;

@@ -387,7 +387,8 @@ function handleGenerateMelody() {
         const generatedMelody = generateMelodyForSong(
             currentMidiData, currentMidiData.mainScaleNotes, currentMidiData.mainScaleRoot,
             CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats,
-            getChordNotes, getNoteName, getRandomElement, getChordRootAndType
+            getChordNotes, getNoteName, getRandomElement, getChordRootAndType,
+            sectionCache
         );
         if (generatedMelody && generatedMelody.length > 0) {
             const melodyFileName = `Phalbo_Caprice_melody_n${currentMidiData.capriceNum || 'X'}.mid`;
@@ -418,7 +419,8 @@ function handleGenerateVocalLine() {
             currentMidiData, currentMidiData.mainScaleNotes, currentMidiData.mainScaleRoot,
             CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats,
             getChordNotes, getNoteName, getRandomElement, getChordRootAndType,
-            options
+            options,
+            sectionCache
         );
         if (vocalLine && vocalLine.length > 0) {
             const fileName = `Phalbo_Caprice_vocal_n${currentMidiData.capriceNum || 'X'}.mid`;
@@ -462,7 +464,7 @@ function handleGenerateBassLine() {
             getDiatonicChords,
             NOTE_NAMES
         };
-        const bassLine = generateBassLineForSong(currentMidiData, helpers);
+        const bassLine = generateBassLineForSong(currentMidiData, helpers, sectionCache);
         if (bassLine && bassLine.length > 0) {
             const fileName = `Phalbo_Caprice_bass_n${currentMidiData.capriceNum || 'X'}.mid`;
             downloadSingleTrackMidi(
@@ -493,7 +495,8 @@ function handleGenerateDrumTrack() {
         const drumTrackOptions = { globalRandomActivationProbability: 0.6, fillFrequency: 0.25 };
         const drumEvents = generateDrumTrackForSong(
             currentMidiData, currentMidiData.bpm, null, currentMidiData.sections,
-            CHORD_LIB, NOTE_NAMES, getRandomElement, drumTrackOptions
+            CHORD_LIB, NOTE_NAMES, getRandomElement, drumTrackOptions,
+            sectionCache
         );
         if (drumEvents && drumEvents.length > 0) {
             const fileName = `Phalbo_Caprice_drums_n${currentMidiData.capriceNum || 'X'}.mid`;
