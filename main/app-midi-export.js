@@ -326,7 +326,8 @@ function handleGenerateChordRhythm() {
         const helpers = {
             getRandomElement: (typeof getRandomElement === 'function' ? getRandomElement : () => null),
             getChordNotes: (typeof getChordNotes === 'function' ? getChordNotes : () => ({notes:[], qualityName:''})),
-            getChordRootAndType: (typeof getChordRootAndType === 'function' ? getChordRootAndType : () => ({root:null, type:''}))
+            getChordRootAndType: (typeof getChordRootAndType === 'function' ? getChordRootAndType : () => ({root:null, type:''})),
+            getWeightedRandom: (typeof getWeightedRandom === 'function' ? getWeightedRandom : () => null)
         };
 
         currentMidiData.sections.forEach(section => {
