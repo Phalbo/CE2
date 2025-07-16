@@ -1,4 +1,17 @@
-# CapricEngine v2.22
+# CapricEngine v2.23
+
+## Changelog (v2.23)
+
+*   **Arpeggiator Overhaul:**
+    *   Renamed "Chord Rhythm" generator to "Arpeggiator" for clarity.
+    *   Massively expanded the arpeggiator's capabilities with a wide variety of new melodic and rhythmic patterns.
+    *   Added support for chord inversions to create more melodic arpeggios.
+    *   Fixed a critical bug where the wrong `getWeightedRandom` function was being called, causing crashes.
+*   **Expanded Drum Library:**
+    *   Added a significant number of new, genre-specific drum patterns (Rock, Pop, Funk, Metal, Electronic).
+    *   Modularized the drum pattern library for easier future expansion.
+*   **UI Updates:**
+    *   Updated the UI to reflect the new "Arpeggiator" naming.
 
 ## Changelog (v2.22)
 

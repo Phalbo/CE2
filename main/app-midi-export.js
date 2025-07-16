@@ -354,9 +354,9 @@ function handleGenerateChordRhythm() {
         });
 
         if (allRhythmicChordEvents && allRhythmicChordEvents.length > 0) {
-            const fileName = `Phalbo_Caprice_n${currentMidiData.capriceNum || 'X'}_Chords_Rhythm.mid`;
+            const fileName = `Phalbo_Caprice_n${currentMidiData.capriceNum || 'X'}_Arpeggiator.mid`;
             downloadSingleTrackMidi(
-                `${currentMidiData.title} - Chords Rhythm`,
+                `${currentMidiData.title} - Arpeggiator`,
                 allRhythmicChordEvents,
                 fileName,
                 currentMidiData.bpm,

@@ -65,35 +65,6 @@ function selectActiveVocalStyle(passedGetRandomElementFunc_param) {
 }
 
 
-function getWeightedRandom(itemsWithProbabilities, passedGetRandomElementFunc_param) {
-    if (!itemsWithProbabilities || itemsWithProbabilities.length === 0) return null;
-
-    let totalProbability = 0;
-    const validItems = itemsWithProbabilities.filter(item => item && typeof item.probability === 'number' && item.probability >= 0);
-
-    if (validItems.length === 0) {
-        const nonUndefinedItems = itemsWithProbabilities.filter(i => i !== undefined && i !== null);
-        return nonUndefinedItems.length > 0 ? passedGetRandomElementFunc_param(nonUndefinedItems) : null;
-    }
-
-    for (const item of validItems) {
-        totalProbability += item.probability;
-    }
-
-    if (totalProbability === 0 && validItems.length > 0) { // Modificato per gestire somma probabilità 0 ma con items validi
-        return passedGetRandomElementFunc_param(validItems);
-    }
-    if (totalProbability === 0) return null; // Se non ci sono item validi o probabilità
-
-    let randomPoint = Math.random() * totalProbability;
-    for (const item of validItems) {
-        if (randomPoint < item.probability) {
-            return item;
-        }
-        randomPoint -= item.probability;
-    }
-    return validItems[validItems.length - 1]; // Fallback all'ultimo item valido
-}
 
 
 function getEffectiveScaleForStyle(mainScaleNotes, rootNoteOfScale, styleModePreference, scales_REF_param, NOTE_NAMES_CONST_REF_param, ALL_NOTES_WITH_FLATS_REF_param, passedGetNoteNameFunc_param) {
@@ -195,7 +166,7 @@ function selectNextStyledVocalPitch(
         let bestFitPitch = null;
         let smallestDiffToIdeal = Infinity;
 
-        const desiredIntervalItem = getWeightedRandom(style.interval_pattern, passedGetRandomElementFunc_param);
+        const desiredIntervalItem = getWeightedRandom(Object.fromEntries(style.interval_pattern.map((item, i) => [i, item])));
         let desiredIntervalSemitones = 0;
         let intervalType = "";
         if(desiredIntervalItem) {
@@ -289,7 +260,7 @@ function getStyledNoteDurationAndRest(currentTicksPerBeat, style, passedGetRando
 
     const rules = isNote ? (style.note_duration_rules || []) : (style.rest_rules || []);
     const defaultRule = isNote ? { duration_type: 'quarter', probability: 1 } : { duration_type: 'eighth', probability: 1 };
-    const chosenRule = getWeightedRandom(rules, passedGetRandomElementFunc_param) || defaultRule;
+    const chosenRule = getWeightedRandom(Object.fromEntries(rules.map((item, i) => [i, item]))) || defaultRule;
 
     let durationFactor = 1.0;
     let baseDurationType = chosenRule.duration_type || 'quarter';
