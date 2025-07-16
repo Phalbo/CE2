@@ -254,6 +254,7 @@ async function generateSongArchitecture() {
     songOutputDiv.innerHTML = '<p><em>Generating your sonic architecture...</em></p>';
     currentSongDataForSave = null; currentMidiData = {};
     glossaryChordData = {};
+    sectionCache = {};
 
     if (midiSectionTitleElement) midiSectionTitleElement.style.display = 'none';
     const actionButtonIDs = [

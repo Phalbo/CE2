@@ -38,11 +38,20 @@ const MELODY_GENERATION_PARAMS = {
  * Funzione principale per generare la melodia per l'intera canzone.
  * Utilizza songMidiData.sections[i].mainChordSlots per le durate degli accordi.
  */
-function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHORD_LIB_GLOBAL, scales_GLOBAL, NOTE_NAMES_GLOBAL, allNotesWithFlats_GLOBAL, getChordNotes_GLOBAL, getNoteName_GLOBAL, getRandomElement_GLOBAL, getChordRootAndType_GLOBAL) {
+function normalizeSectionName(name) {
+  // Rimuove numeri finali tipo "Verse 1" → "Verse"
+  return name.replace(/\s*\d+$/, '').trim();
+}
+
+function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHORD_LIB_GLOBAL, scales_GLOBAL, NOTE_NAMES_GLOBAL, allNotesWithFlats_GLOBAL, getChordNotes_GLOBAL, getNoteName_GLOBAL, getRandomElement_GLOBAL, getChordRootAndType_GLOBAL, sectionCache) {
     const melodyEvents = [];
     if (!songMidiData || !songMidiData.sections || !mainScaleNotes || mainScaleNotes.length === 0) {
         console.warn("generateMelodyForSong: Dati canzone o scala principale mancanti.");
         return melodyEvents;
+    }
+
+    if (!sectionCache.melody) {
+        sectionCache.melody = {};
     }
 
     const scaleNoteIndices = mainScaleNotes.map(noteName => {
@@ -65,6 +74,17 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
     let lastMelodyNotePitch = null; // Per tracciare l'ultima nota e favorire movimenti congiunti
 
     songMidiData.sections.forEach(sectionData => {
+        const baseName = normalizeSectionName(sectionData.name);
+        if (sectionCache.melody[baseName]) {
+            const cachedMelody = sectionCache.melody[baseName];
+            cachedMelody.forEach(event => {
+                melodyEvents.push({ ...event, startTick: event.startTick + sectionData.startTick });
+            });
+            return;
+        }
+
+        const sectionMelody = [];
+
         if (!sectionData.mainChordSlots || sectionData.mainChordSlots.length === 0) {
             // Se non ci sono mainChordSlots (es. sezione di silenzio), non fare nulla per questa sezione.
             return;
@@ -166,7 +186,7 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
                     }
 
                     if (targetPitch !== null) {
-                        melodyEvents.push({
+                        sectionMelody.push({
                             pitch: [targetPitch],
                             duration: `T${Math.round(actualNoteDuration)}`,
                             startTick: slotStartTickAbsolute + currentTickInSlot + tickInRhythmicPattern,
@@ -188,7 +208,7 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
 
                 const pitchCandidates = availableNotesForSlot.map(idx => idx + MELODY_GENERATION_PARAMS.octaveBase * 12);
                 const targetPitch = getRandomElement_GLOBAL(pitchCandidates);
-                melodyEvents.push({
+                sectionMelody.push({
                     pitch: [targetPitch],
                     duration: `T${Math.round(noteDur)}`,
                     startTick: slotStartTickAbsolute + currentTickInSlot,
@@ -198,6 +218,9 @@ function generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, CHOR
                 currentTickInSlot += noteDur;
             }
         });
+
+        sectionCache.melody[baseName] = sectionMelody;
+        melodyEvents.push(...sectionMelody);
     });
 
     return melodyEvents;

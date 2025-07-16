@@ -436,6 +436,11 @@ function getStyledStartTick(currentRelativeTickInChord, currentTicksPerBeat, sty
  * Main function to generate the vocal line for the entire song.
  * Modificata per usare section.mainChordSlots.
  */
+function normalizeSectionName(name) {
+  // Rimuove numeri finali tipo "Verse 1" → "Verse"
+  return name.replace(/\s*\d+$/, '').trim();
+}
+
 function generateVocalLineForSong(
     songMidiData,
     mainScaleNotes,
@@ -448,11 +453,17 @@ function generateVocalLineForSong(
     passedGetNoteNameFunc,
     passedGetRandomElementFunc,
     passedGetChordRootAndTypeFunc,
-    options = {}
+    options = {},
+    sectionCache
 ) {
     if (!songMidiData || !songMidiData.sections || !mainScaleNotes || mainScaleNotes.length === 0) {
         console.error("generateVocalLineForSong: Dati canzone o scala mancanti."); return null;
     }
+
+    if (!sectionCache.vocal) {
+        sectionCache.vocal = {};
+    }
+
     if (!rootNoteOfScale || typeof rootNoteOfScale !== 'string') {
         console.error("generateVocalLineForSong: rootNoteOfScale non valido:", rootNoteOfScale); return null;
     }
@@ -482,6 +493,17 @@ function generateVocalLineForSong(
     const nonSingingSections = ["intro", "instrumental", "solo", "breakdown", "noise", "glitch", "ambient", "texture", "soundscape", "disruption", "reverse", "coda", "outro", "end", "fade", "silence", "drone", "sonicinterlude"]; // Corretto "sonic interlude"
 
     songMidiData.sections.forEach((section, sectionIdx) => {
+        const baseName = normalizeSectionName(section.name);
+        if (sectionCache.vocal && sectionCache.vocal[baseName]) {
+            const cachedVocalLine = sectionCache.vocal[baseName];
+            cachedVocalLine.forEach(event => {
+                vocalEvents.push({ ...event, startTick: event.startTick + section.startTick });
+            });
+            return;
+        }
+
+        const sectionVocalLine = [];
+
         if (!section || !section.mainChordSlots || !section.timeSignature || typeof section.startTick === 'undefined') {
             console.warn("generateVocalLineForSong: Sezione malformata o senza mainChordSlots, la salto:", section.name); return;
         }
@@ -558,7 +580,7 @@ function generateVocalLineForSong(
                     const eventStartAbsolute = currentSlotAbsoluteStartTickInSong + scaledEventStartRelative;
 
                     if (eventStartAbsolute < (sectionStartTickAbsolute + sectionTotalDurationTicks) && eventDuration > 0) {
-                        vocalEvents.push({
+                        sectionVocalLine.push({
                             pitch: [newPitch],
                             duration: `T${Math.round(eventDuration)}`,
                             startTick: Math.round(eventStartAbsolute),
@@ -649,7 +671,7 @@ function generateVocalLineForSong(
                                 startTick: Math.round(eventAbsoluteStartTick),
                                 velocity: eventVelocity
                             };
-                            vocalEvents.push(eventToAdd);
+                            sectionVocalLine.push(eventToAdd);
                             if (currentMotifStorageForChord) {
                                 currentMotifStorageForChord.events.push({
                                     pitch: targetPitch,
@@ -673,6 +695,9 @@ function generateVocalLineForSong(
         if (isChorusSection && !firstChorusProcessed && storedChorusMotifs_Vocal.length > 0) {
             firstChorusProcessed = true;
         }
+
+        sectionCache.vocal[baseName] = sectionVocalLine;
+        vocalEvents.push(...sectionVocalLine);
     });
 
     if (vocalEvents.length > 1) {
