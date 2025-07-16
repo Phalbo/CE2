@@ -17,8 +17,10 @@
   <script src="lib/drum-patterns-library.js"></script>
   <script src="lib/drum-patterns-extra.js"></script>
   <script src="lib/arpeggiator.js"></script>
+  <script src="lib/chance.min.js"></script>
 
   <!-- Load Generators -->
+  <script src="gen/phalbo-title-generator.js"></script>
   <script src="gen/melody-generator.js"></script>
   <script src="gen/generateVocalLineForSong.js"></script>
   <script src="gen/generateBassLineForSong.js"></script>
@@ -134,6 +136,21 @@
         if(!sectionCache.melody['Verse'] || !sectionCache.vocal['Verse'] || !sectionCache.bass['Verse'] || !sectionCache.drums['Verse']) {
             throw new Error("Caching test failed: Not all parts for 'Verse' were cached.");
         }
+
+        // Title Generator
+        console.log('--- Testing Title Generator ---');
+        let allTitlesValid = true;
+        for (let i = 0; i < 10; i++) {
+            const title = generatePhalboTitle();
+            console.log(`Generated Title ${i+1}: ${title}`);
+            if (!title || title.length === 0 || title.includes('undefined')) {
+                allTitlesValid = false;
+                break;
+            }
+        }
+        if (!allTitlesValid) throw new Error("Title generation failed, produced invalid title.");
+        resultsDiv.innerHTML += `<p>Title Generator Test: Passed. Check console for examples.</p>`;
+
         resultsDiv.innerHTML += `<p><strong>All tests passed!</strong></p>`;
 
 
