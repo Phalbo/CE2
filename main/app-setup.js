@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // NUOVO PULSANTE per "Chords Rhythm"
     const generateChordRhythmButton = document.createElement('button');
     generateChordRhythmButton.id = 'generateChordRhythmButton'; // ID per il nuovo pulsante
-    generateChordRhythmButton.textContent = 'Chords Rhythm';
+    generateChordRhythmButton.textContent = 'Arpeggiator';
     generateChordRhythmButton.style.display = 'none'; generateChordRhythmButton.type = 'button';
     actionButtonsContainer.appendChild(generateChordRhythmButton); // Assicurati che sia aggiunto qui!
 

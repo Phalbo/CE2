@@ -80,7 +80,7 @@ function navigateShape(fundamentalChordName, direction) {
 async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, mainScaleText, mainScaleParsedNotes, mainScaleParsedRoot, mainScaleParsedName) {
     const songOutputDiv = document.getElementById('songOutput');
     if (!songOutputDiv) {
-        console.error("Elemento 'songOutput' non trovato nel DOM.");
+        console.error("Element 'songOutput' not found in DOM.");
         return;
     }
 
@@ -91,8 +91,8 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
     };
     for (const depName in dependencies) {
         if (typeof dependencies[depName] === 'undefined') {
-            console.error(`renderSongOutput: Dipendenza globale mancante: ${depName}.`);
-            songOutputDiv.innerHTML = "<p>Errore interno durante il rendering (dipendenza mancante). Controlla la console.</p>";
+            console.error(`renderSongOutput: Missing global dependency: ${depName}.`);
+            songOutputDiv.innerHTML = "<p>Internal error during rendering (missing dependency). Check the console.</p>";
             return;
         }
     }
@@ -102,7 +102,6 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
     const moodProfile = MOOD_PROFILES[mood] || MOOD_PROFILES["very_normal_person"];
     const finalStyleNote = styleNote || moodProfile.styleNotes || "Experiment.";
 
-
     let output = `<h3 class="song-title-main">${displayTitle}</h3><div class="song-main-info">`;
     output += `<p><strong>Mood:</strong> ${mood.replace(/_/g, ' ')}</p>`;
     output += `<p><strong>Key:</strong> ${fullKeyName || "N/A"}</p>`;
@@ -111,7 +110,6 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
     output += `<p id="estimated-duration"></p>`;
     output += `<p><strong>Style Notes:</strong> ${finalStyleNote}</p></div>`;
 
-    // NUOVA TIMELINE PER LE SEZIONI
     output += `<div class="song-sections-timeline" id="song-timeline-container">`;
     sections.forEach((sectionData, sectionIndex) => {
         const cleanSectionNameForCssVar = getCleanSectionName(sectionData.name);
@@ -126,7 +124,7 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
             const minVisibleBarsValue = rootStyles.getPropertyValue('--min-section-bar-display').trim();
             if (barUnitWidthValue) barUnitWidth = parseInt(barUnitWidthValue, 10) || 35;
             if (minVisibleBarsValue) minVisibleBars = parseInt(minVisibleBarsValue, 10) || 4;
-        } catch(e) { /* Usa fallback */ }
+        } catch(e) { /* Use fallback */ }
 
         const displayBarUnits = Math.max(barCountActual, minVisibleBars);
         const sectionWidthPx = barUnitWidth * displayBarUnits;
@@ -147,10 +145,8 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
     });
     output += `</div>`;
 
-    // --- SEZIONE SCALA PRINCIPALE (RIPRISTINATA E CORRETTA) ---
-    // Assicurati che l'elemento section abbia la classe .main-content-section per lo stile.
     output += `<section id="main-scale-display-section" class="main-content-section">`;
-    output += `  <h3 class="section-header-title">Main Song Scale</h3>`; // Usa la classe corretta per i titoli
+    output += `  <h3 class="section-header-title">Main Song Scale</h3>`;
     output += `  <p><strong>${mainScaleText.replace(/<br\/?>/gi, ' ').replace(/<\/?em>/gi, '')}</strong></p>`;
     if (mainScaleParsedNotes && mainScaleParsedNotes.length > 0 && typeof renderGuitarScaleDiagram === "function" && typeof renderPianoScaleDiagram === "function") {
         output += `  <div class="main-scale-diagram-container">`;
@@ -162,10 +158,8 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
     }
     output += `</section>`;
 
-    // --- GLOSSARIO ACCORDI (RIPRISTINATO E CORRETTO) ---
-    // Assicurati che l'elemento section abbia la classe .main-content-section per lo stile.
     output += `<section id="chord-glossary-section" class="main-content-section">`;
-    output += `  <h3 class="chord-glossary-title section-header-title">Used Chords Glossary:</h3>`; // Usa la classe corretta
+    output += `  <h3 class="chord-glossary-title section-header-title">Used Chords Glossary:</h3>`;
     output += `  <div class="chord-glossary-grid" id="chord-glossary-grid-container">`;
 
     allGeneratedChordsSet.forEach(fundamentalChordName_normalized => {
@@ -178,7 +172,6 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
 
     songOutputDiv.innerHTML = output;
 
-    // Popola la griglia delle barre e gli accordi per ogni sezione DOPO l'inserimento nel DOM
     document.querySelectorAll('.timeline-section-card').forEach(card => {
         const grid = card.querySelector('.section-bar-grid');
         const chordsDiv = card.querySelector('.section-card-chords');
@@ -197,7 +190,7 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
         }
         if (chordsDiv && chordsContainer) {
             const chordString = chordsDiv.dataset.chords;
-            if (chordString && chordString.trim() !== '' && chordString !== '(No Chords)') { // Modificato il controllo
+            if (chordString && chordString.trim() !== '' && chordString !== '(No Chords)') {
                 const existingLabel = chordsContainer.querySelector('.section-card-chords-label');
                 if (existingLabel) existingLabel.remove();
 
@@ -214,7 +207,6 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
         }
     });
 
-    // FASE 2: Carica e popola ogni entry del glossario asincronamente
     const chordLoadPromises = [];
     window.glossaryChordData = {};
 
@@ -281,7 +273,7 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
                 }
             }
 
-          const randomIndexForShape = chordEntryInLib.shapes.length > 0 ?
+            const randomIndexForShape = chordEntryInLib.shapes.length > 0 ?
                 Math.floor(Math.random() * chordEntryInLib.shapes.length) : 0;
 
             glossaryChordData[fundamentalChordName_normalized] = {
@@ -376,15 +368,14 @@ async function renderSongOutput(songData, allGeneratedChordsSet, styleNote, main
 
     Promise.all(chordLoadPromises)
         .then(() => {
-            // Chiamare updateEstimatedSongDuration DOPO che tutto il resto è stato renderizzato
             if (typeof updateEstimatedSongDuration === "function") {
                 updateEstimatedSongDuration();
             }
         })
         .catch(mainError => {
-            console.error("ERRORE PRINCIPALE DURANTE PROMISE.ALL PER IL GLOSSARIO:", mainError, mainError.stack);
+            console.error("Error during glossary promise resolution:", mainError, mainError.stack);
             if (typeof updateEstimatedSongDuration === "function") {
-                updateEstimatedSongDuration(); // Chiama anche in caso di errore
+                updateEstimatedSongDuration();
             }
         });
 }

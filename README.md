@@ -1,5 +1,38 @@
-# CapricEngine v2.21
+# CapricEngine v2.24
 
+## Changelog (v2.24)
+
+*   **Surreal Title Generator:** Implemented a new Dada-inspired title generator (`phalbo-title-generator.js`) using extensive word libraries and `chance.js` for creative and unique song titles.
+*   **UI and Text Cleanup:**
+    *   Fully translated the UI and text file outputs to English.
+    *   Corrected the "Arpeggiator" button logic to prevent it from reverting to its old name.
+    *   Sanitized generated MIDI file names to be based on the new unique titles.
+    *   Removed obsolete sections from the generated text file for a cleaner output.
+*   **Enhanced Chord Glossary:** The initial view of a chord's fingering in the glossary is now randomized, offering more variety at first glance.
+*   **Bug Fixes:**
+    *   Consolidated the `getWeightedRandom` function into a single, robust version in `theory-helpers.js` to fix a critical `TypeError`.
+
+## Changelog (v2.23)
+
+*   **Arpeggiator Overhaul:**
+    *   Renamed "Chord Rhythm" generator to "Arpeggiator" for clarity.
+    *   Massively expanded the arpeggiator's capabilities with a wide variety of new melodic and rhythmic patterns.
+    *   Added support for chord inversions to create more melodic arpeggios.
+    *   Fixed a critical bug where the wrong `getWeightedRandom` function was being called, causing crashes.
+*   **Expanded Drum Library:**
+    *   Added a significant number of new, genre-specific drum patterns (Rock, Pop, Funk, Metal, Electronic).
+    *   Modularized the drum pattern library for easier future expansion.
+*   **UI Updates:**
+    *   Updated the UI to reflect the new "Arpeggiator" naming.
+
+## Changelog (v2.22)
+
+*   **MIDI Generation Overhaul:** Fixed critical bugs in the MIDI generation logic for all instruments.
+    *   Resolved issues with "gaps" between musical phrases and notes extending beyond their intended duration.
+    *   Ensured all tracks (Melody, Vocal, Bass, Drums) are perfectly synchronized.
+*   **Robust Caching System:** Implemented a reliable caching system for all generated parts (melody, vocals, basslines, and drum patterns).
+    *   Repeated sections (e.g., "Verse 1", "Verse 2") now have identical musical content, leading to more coherent and structured songs.
+    *   The cache is intelligently cleared for each new song generation.
 
 ## Changelog (v2.21)
 

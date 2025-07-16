@@ -34,90 +34,7 @@ function buildSongDataForTextFile() {
     } else {
         songDataText += `Meter: N/A\n`;
     }
-    songDataText += `Style Notes: ${styleNote}\n\nSTRUCTURE AND CHORDS:\n`;
-
-    sections.forEach(sectionData => {
-        const sectionTS = sectionData.timeSignature;
-        const ticksPerBeatInSection = (4 / sectionTS[1]) * TPQN_TEXT;
-
-        songDataText += `\n--- ${sectionData.name.toUpperCase()} (${sectionData.measures} bars in ${sectionTS[0]}/${sectionTS[1]}) ---\n`;
-
-        if (sectionData.baseChords && sectionData.baseChords.length > 0) {
-            songDataText += `Accordi Principali: [ ${sectionData.baseChords.join(' | ')} ]\n`;
-        } else {
-            songDataText += `Accordi Principali: (None/Silence)\n`;
-        }
-
-        songDataText += `Ritmo Armonico Dettagliato (per battuta):\n`;
-        if (sectionData.detailedHarmonicEvents && sectionData.detailedHarmonicEvents.length > 0) {
-            let currentMeasureNumber = 1;
-            let ticksWithinCurrentMeasureRendered = 0; // Tick all'interno della misura corrente nel testo
-            let measureOutput = `Bar ${currentMeasureNumber}: `;
-            const ticksPerMeasureInSection = sectionTS[0] * ticksPerBeatInSection;
-
-            sectionData.detailedHarmonicEvents.forEach((event, index) => {
-                const eventStartTickInSection = event.startTickInSection;
-                const eventMeasureNumber = Math.floor(eventStartTickInSection / ticksPerMeasureInSection) + 1;
-
-                if (eventMeasureNumber > currentMeasureNumber) {
-                    songDataText += measureOutput.trim().replace(/\|$/, '').trim() + '\n';
-                    for (let m = currentMeasureNumber + 1; m < eventMeasureNumber; m++) {
-                        songDataText += `Bar ${m}: (continuation or silence)\n`;
-                    }
-                    currentMeasureNumber = eventMeasureNumber;
-                    measureOutput = `Bar ${currentMeasureNumber}: `;
-                    ticksWithinCurrentMeasureRendered = 0;
-                }
-
-                // Calcola l'offset dell'evento all'interno della sua battuta logica
-                const eventOffsetInItsMeasure = eventStartTickInSection % ticksPerMeasureInSection;
-
-                // Se l'evento non inizia subito dove finiva il precedente (all'interno della stessa battuta testuale)
-                if (eventOffsetInItsMeasure > ticksWithinCurrentMeasureRendered + (TPQN_TEXT / 32) && measureOutput !== `Bar ${currentMeasureNumber}: ` ) {
-                     // Potrebbe esserci un silenzio implicito, non lo segno per ora per non affollare
-                }
-
-                let durationInBeats = (event.durationTicks / ticksPerBeatInSection);
-                // Formattazione per togliere .00 e .50
-                let durationString = durationInBeats.toFixed(2);
-                if (durationString.endsWith('.00')) {
-                    durationString = durationString.substring(0, durationString.length - 3);
-                } else if (durationString.endsWith('0') && durationString.includes('.')) {
-                    durationString = durationString.substring(0, durationString.length - 1);
-                }
-
-                let chordDisplayName = event.chordName;
-                if (event.isPassing) chordDisplayName += " (pass)";
-                if (event.isHit) chordDisplayName += " (hit)";
-                chordDisplayName += ` (${durationString}b)`;
-
-                if (measureOutput === `Bar ${currentMeasureNumber}: `) {
-                    measureOutput += chordDisplayName;
-                } else {
-                    measureOutput += ` | ${chordDisplayName}`;
-                }
-                ticksWithinCurrentMeasureRendered = eventOffsetInItsMeasure + event.durationTicks;
-            });
-            songDataText += measureOutput.trim().replace(/\|$/, '').trim() + '\n'; // Assicura che l'ultima misura sia scritta
-
-            // Aggiungi righe per eventuali battute finali della sezione che sono vuote (improbabile con la logica attuale ma per sicurezza)
-            const totalMeasuresRendered = currentMeasureNumber;
-            if (sectionData.measures > totalMeasuresRendered) {
-                for (let m = totalMeasuresRendered + 1; m <= sectionData.measures; m++) {
-                     songDataText += `Bar ${m}: (continuation or silence)\n`;
-                }
-            }
-
-
-        } else {
-            songDataText += `(Nessun evento armonico dettagliato per questa sezione)\n`;
-        }
-
-        const cleanSectionNameForLogic = (typeof getCleanSectionName === 'function') ? getCleanSectionName(sectionData.name) : sectionData.name.toLowerCase();
-        if (cleanSectionNameForLogic === "bridge-mod" || ( (["bridge", "middle8"].includes(cleanSectionNameForLogic)) && mood !== "very_normal_person" ) ) {
-            songDataText += `  Note: Section with potential modulation or strong harmonic contrast.\n`;
-        }
-    });
+    songDataText += `Style Notes: ${styleNote}\n`;
 
     let estimatedTotalSeconds = 0;
     sections.forEach(section => {
@@ -130,41 +47,19 @@ function buildSongDataForTextFile() {
     });
     const minutes = Math.floor(estimatedTotalSeconds / 60);
     const seconds = Math.round(estimatedTotalSeconds % 60);
-    songDataText += `\nEstimated Total Duration: ${minutes} min ${seconds < 10 ? '0' : ''}${seconds} sec\n`;
+    songDataText += `Estimated Total Duration: ${minutes} min ${seconds < 10 ? '0' : ''}${seconds} sec\n\n`;
 
-    songDataText += "\n\nCHORD GLOSSARY (unique chords used):\n";
-    let chordsInGlossary = 0;
-    const uniqueChordsForGlossary = new Set();
-    sections.forEach(sec => {
-        if (sec.detailedHarmonicEvents) {
-            sec.detailedHarmonicEvents.forEach(ev => uniqueChordsForGlossary.add(ev.chordName));
-        } else if (sec.baseChords) { // Fallback se detailedHarmonicEvents non c'è
-            sec.baseChords.forEach(ch => uniqueChordsForGlossary.add(ch));
+    songDataText += `STRUCTURE AND CHORDS:\n`;
+
+    sections.forEach(sectionData => {
+        songDataText += `\n--- ${sectionData.name.toUpperCase()} (${sectionData.measures} bars in ${sectionData.timeSignature[0]}/${sectionData.timeSignature[1]}) ---\n`;
+
+        if (sectionData.baseChords && sectionData.baseChords.length > 0) {
+            songDataText += `Chords: [ ${sectionData.baseChords.join(' | ')} ]\n`;
+        } else {
+            songDataText += `Chords: (None/Silence)\n`;
         }
     });
-
-      uniqueChordsForGlossary.forEach(chordName => {
-        if (glossaryChordData[chordName] && Object.hasOwnProperty.call(glossaryChordData, chordName)) {
-            chordsInGlossary++;
-            const data = glossaryChordData[chordName];
-            songDataText += `\n${data.fundamentalDisplayName}:\n  Quality: ${data.fundamentalQuality}\n  Notes (root pos.): ${data.fundamentalNotes.join(" ")}\n`;
-            const shapeIndex = (typeof data.currentShapeIndex === 'number' && data.shapes && data.shapes.length > 0)
-                ? Math.min(Math.max(data.currentShapeIndex, 0), data.shapes.length - 1)
-                : 0;
-            const chosenShape = data.shapes && data.shapes.length > 0 ? data.shapes[shapeIndex] : null;
-            if(chosenShape && chosenShape.guitarFrets){
-                songDataText += `  Guitar (fingering '${chosenShape.displayName}'): ${chosenShape.guitarFrets.join('-')}\n`;
-            }
-        } else if (CHORD_LIB && CHORD_LIB[chordName]) { // Prendi info da CHORD_LIB se non nel glossaryChordData specifico
-            chordsInGlossary++;
-            const data = CHORD_LIB[chordName];
-            songDataText += `\n${data.fullName || chordName}:\n  Quality: ${data.quality}\n  Notes (root pos.): ${data.notes.join(" ")}\n`;
-        }
-    });
-
-    if (chordsInGlossary === 0) {
-         songDataText += "No specific chords in glossary.\n";
-    }
     currentSongDataForSave = {title: title, content: songDataText};
 }
 
@@ -319,14 +214,15 @@ function handleGenerateChordRhythm() {
 
 
     const chordRhythmBtn = document.getElementById('generateChordRhythmButton');
-    if (chordRhythmBtn) { chordRhythmBtn.disabled = true; chordRhythmBtn.textContent = "Creating Rhythm..."; }
+    if (chordRhythmBtn) { chordRhythmBtn.disabled = true; chordRhythmBtn.textContent = "Creating Arpeggio..."; }
 
     try {
         let allRhythmicChordEvents = [];
         const helpers = {
             getRandomElement: (typeof getRandomElement === 'function' ? getRandomElement : () => null),
             getChordNotes: (typeof getChordNotes === 'function' ? getChordNotes : () => ({notes:[], qualityName:''})),
-            getChordRootAndType: (typeof getChordRootAndType === 'function' ? getChordRootAndType : () => ({root:null, type:''}))
+            getChordRootAndType: (typeof getChordRootAndType === 'function' ? getChordRootAndType : () => ({root:null, type:''})),
+            getWeightedRandom: (typeof getWeightedRandom === 'function' ? getWeightedRandom : () => null)
         };
 
         currentMidiData.sections.forEach(section => {
@@ -353,9 +249,9 @@ function handleGenerateChordRhythm() {
         });
 
         if (allRhythmicChordEvents && allRhythmicChordEvents.length > 0) {
-            const fileName = `Phalbo_Caprice_n${currentMidiData.capriceNum || 'X'}_Chords_Rhythm.mid`;
+            const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Arpeggio.mid`;
             downloadSingleTrackMidi(
-                `${currentMidiData.title} - Chords Rhythm`,
+                `Arpeggio for ${currentMidiData.title}`,
                 allRhythmicChordEvents,
                 fileName,
                 currentMidiData.bpm,
@@ -363,13 +259,13 @@ function handleGenerateChordRhythm() {
                 0
             );
         } else {
-            alert("Impossibile generare accordi ritmici con i dati attuali.");
+            alert("Could not generate arpeggio with the current data.");
         }
     } catch (e) {
-        console.error("Errore durante la generazione degli accordi ritmici:", e, e.stack);
-        alert("Errore critico durante la generazione degli accordi ritmici. Controlla la console.");
+        console.error("Error during arpeggio generation:", e, e.stack);
+        alert("Critical error during arpeggio generation. Check the console.");
     } finally {
-        if (chordRhythmBtn) { chordRhythmBtn.disabled = false; chordRhythmBtn.textContent = "Chords Rhythm"; }
+        if (chordRhythmBtn) { chordRhythmBtn.disabled = false; chordRhythmBtn.textContent = "Arpeggiator"; }
     }
 }
 
