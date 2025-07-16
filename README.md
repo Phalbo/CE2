@@ -1,5 +1,13 @@
-# CapricEngine v2.21
+# CapricEngine v2.22
 
+## Changelog (v2.22)
+
+*   **MIDI Generation Overhaul:** Fixed critical bugs in the MIDI generation logic for all instruments.
+    *   Resolved issues with "gaps" between musical phrases and notes extending beyond their intended duration.
+    *   Ensured all tracks (Melody, Vocal, Bass, Drums) are perfectly synchronized.
+*   **Robust Caching System:** Implemented a reliable caching system for all generated parts (melody, vocals, basslines, and drum patterns).
+    *   Repeated sections (e.g., "Verse 1", "Verse 2") now have identical musical content, leading to more coherent and structured songs.
+    *   The cache is intelligently cleared for each new song generation.
 
 ## Changelog (v2.21)
 
