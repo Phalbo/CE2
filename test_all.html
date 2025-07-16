@@ -15,6 +15,7 @@
   <script src="lib/theory-helpers.js"></script>
   <script src="lib/vocal_profiles.js"></script>
   <script src="lib/drum-patterns-library.js"></script>
+  <script src="lib/arpeggiator.js"></script>
 
   <!-- Load Generators -->
   <script src="gen/melody-generator.js"></script>
@@ -80,6 +81,7 @@
         getChordNotes: getChordNotes,
         getNoteName: getNoteName,
         getRandomElement: (arr) => arr[Math.floor(Math.random() * arr.length)],
+        getWeightedRandom: getWeightedRandom,
         getChordRootAndType: getChordRootAndType,
         getDiatonicChords: getDiatonicChords,
         NOTE_NAMES: NOTE_NAMES,
@@ -90,6 +92,14 @@
 
       // --- Run Tests ---
       try {
+        // Arpeggiator
+        console.log('--- Testing Arpeggiator ---');
+        const arpeggioSlotContext = { chordName: 'Cmaj7', startTickAbsolute: 0, durationTicks: 768, timeSignature: [4, 4] };
+        const arpeggioEvents = generateChordRhythmEvents(songMidiData, helpers.CHORD_LIB_GLOBAL, helpers.NOTE_NAMES, helpers, arpeggioSlotContext);
+        console.log(`Generated ${arpeggioEvents.length} arpeggio events.`);
+        resultsDiv.innerHTML += `<p>Arpeggiator Test: Generated ${arpeggioEvents.length} events. Check console for details.</p>`;
+        if (arpeggioEvents.length === 0) throw new Error("Arpeggiator generation failed, no events produced.");
+
         // Melody
         console.log('--- Testing Melody Generator ---');
         const melodyEvents = generateMelodyForSong(songMidiData, mainScaleNotes, mainScaleRoot, helpers.CHORD_LIB_GLOBAL, helpers.scales_GLOBAL, helpers.NOTE_NAMES, helpers.allNotesWithFlats_GLOBAL, helpers.getChordNotes, helpers.getNoteName, helpers.getRandomElement, helpers.getChordRootAndType, sectionCache);
