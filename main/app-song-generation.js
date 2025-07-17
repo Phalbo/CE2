@@ -410,20 +410,26 @@ async function generateSongArchitecture() {
             currentGlobalTickForTS += finalMeasures * beatsPerMeasureInSection * ticksPerBeatForThisSection;
         });
 
-        // --- FASE DI CREAZIONE DEI mainChordSlots (Logica Semplificata) ---
+        // --- FASE DI CREAZIONE DEI mainChordSlots (Logica Ritmica Avanzata) ---
         rawMidiSectionsData.forEach(sectionData => {
-            const ticksPerBar = (4 / sectionData.timeSignature[1]) * sectionData.timeSignature[0] * TICKS_PER_QUARTER_NOTE_REFERENCE;
+            const timeSignatureStr = `${sectionData.timeSignature[0]}/${sectionData.timeSignature[1]}`;
+            let currentTickInSection = 0;
 
             for (let i = 0; i < sectionData.measures; i++) {
-                const chordIndex = Math.min(i, sectionData.baseChords.length - 1);
-                if (sectionData.baseChords.length > 0) {
+                const rhythmPattern = getChordRhythmPattern(timeSignatureStr);
+                const validatedPattern = validateAndFixPattern(rhythmPattern.pattern, timeSignatureStr);
+                const chordEvents = expandChordRhythm(validatedPattern, sectionData.baseChords);
+
+                for (const event of chordEvents) {
+                    const durationTicks = MIDI_DURATION_TO_TICKS[event.duration] || TICKS_PER_QUARTER_NOTE_REFERENCE;
                     sectionData.mainChordSlots.push({
-                        chordName: sectionData.baseChords[chordIndex],
-                        effectiveStartTickInSection: i * ticksPerBar,
-                        effectiveDurationTicks: ticksPerBar,
+                        chordName: event.chord,
+                        effectiveStartTickInSection: currentTickInSection,
+                        effectiveDurationTicks: durationTicks,
                         timeSignature: sectionData.timeSignature,
                         sectionStartTick: sectionData.startTick
                     });
+                    currentTickInSection += durationTicks;
                 }
             }
         });

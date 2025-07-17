@@ -36,10 +36,10 @@
 
 ## Changelog (v2.21)
 
-*   **Modal Interchange:** Implemented an optional modal interchange feature that allows the generator to borrow chords from parallel modes. This can be enabled or disabled in the UI.
-*   **Bassline Improvements:**
-    *   The bassline generator now has a higher minimum note range to prevent notes from going too low.
-    *   Added a library of new rhythmic patterns for the bassline, increasing its variety.
+*   **Rhythmic Chord Generation:** Implemented an advanced rhythmic chord generation system to create more realistic and varied harmonic accompaniments.
+*   **New Functions:** Added `expandChordRhythm()` and `totalBeats()` to the new `chordRhythmGenerator` module.
+*   **New Module:** Created the `chordRhythmGenerator` module to handle the generation of rhythmic chord patterns.
+*   **Generator Synchronization:** The melody, bass, and vocal generators now follow the actual rhythm of the chords, ensuring that all parts are correctly synchronized.
 
 ## Changelog (v2.20) 
 
