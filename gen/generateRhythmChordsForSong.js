@@ -1,6 +1,7 @@
 // gen/generateRhythmChordsForSong.js
 
-function generateRhythmChordsForSong(songData, helpers, sectionCache) {
+function generateRhythmChordsForSong(songData, helpers) {
+    const { sectionCache } = helpers;
     const chordEvents = [];
     let lastEvent = null;
 
