@@ -24,20 +24,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveSongButton = document.createElement('button');
     saveSongButton.id = 'saveSongButton'; saveSongButton.textContent = 'Save Details';
     saveSongButton.style.display = 'none'; saveSongButton.type = 'button';
+    saveSongButton.classList.add('action-button');
     actionButtonsContainer.appendChild(saveSongButton);
 
     const downloadSingleTrackChordMidiButton = document.createElement('button');
     downloadSingleTrackChordMidiButton.id = 'downloadSingleTrackChordMidiButton';
-    downloadSingleTrackChordMidiButton.textContent = 'Chords (Pad)'; // Nome aggiornato
+    downloadSingleTrackChordMidiButton.textContent = 'Chord Pad';
     downloadSingleTrackChordMidiButton.style.display = 'none'; downloadSingleTrackChordMidiButton.type = 'button';
+    downloadSingleTrackChordMidiButton.classList.add('action-button');
     actionButtonsContainer.appendChild(downloadSingleTrackChordMidiButton);
 
-    // NUOVO PULSANTE per "Chords Rhythm"
-    const generateChordRhythmButton = document.createElement('button');
-    generateChordRhythmButton.id = 'generateChordRhythmButton'; // ID per il nuovo pulsante
-    generateChordRhythmButton.textContent = 'Arpeggiator';
-    generateChordRhythmButton.style.display = 'none'; generateChordRhythmButton.type = 'button';
-    actionButtonsContainer.appendChild(generateChordRhythmButton); // Assicurati che sia aggiunto qui!
+    const rhythmChordsButton = document.createElement('button');
+    rhythmChordsButton.id = 'rhythmChordsButton';
+    rhythmChordsButton.textContent = 'Rhythm Chords';
+    rhythmChordsButton.style.display = 'none'; rhythmChordsButton.type = 'button';
+    rhythmChordsButton.classList.add('action-button');
+    actionButtonsContainer.appendChild(rhythmChordsButton);
+
+    // NUOVO PULSANTE per "Arpeggiator"
+    const arpeggiatorButton = document.createElement('button');
+    arpeggiatorButton.id = 'arpeggiatorButton'; // ID per il nuovo pulsante
+    arpeggiatorButton.textContent = 'Arpeggiator';
+    arpeggiatorButton.style.display = 'none'; arpeggiatorButton.type = 'button';
+    arpeggiatorButton.classList.add('action-button');
+    actionButtonsContainer.appendChild(arpeggiatorButton); // Assicurati che sia aggiunto qui!
 
     // Rimuovi esplicitamente il vecchio pulsante "Chords (multitrack)" se esistesse nel DOM
     // Questo previene che un vecchio elemento HTML interferisca.
@@ -167,12 +177,17 @@ document.addEventListener('DOMContentLoaded', () => {
             singleTrackChordBtn.onclick = handleGenerateSingleTrackChordMidi;
         }
 
-        // Listener per il nuovo pulsante "Chords Rhythm"
-        const chordRhythmBtn = document.getElementById('generateChordRhythmButton'); // Usa il nuovo ID
-        if (chordRhythmBtn && typeof handleGenerateChordRhythm === "function") {
-            chordRhythmBtn.onclick = handleGenerateChordRhythm;
-        } else if(chordRhythmBtn) {
-            console.warn("handleGenerateChordRhythm function not found for 'Chords Rhythm' button.");
+        const rhythmChordsBtn = document.getElementById('rhythmChordsButton');
+        if (rhythmChordsBtn && typeof handleGenerateRhythmChords === "function") {
+            rhythmChordsBtn.onclick = handleGenerateRhythmChords;
+        }
+
+        // Listener per il nuovo pulsante "Arpeggiator"
+        const arpeggiatorBtn = document.getElementById('arpeggiatorButton'); // Usa il nuovo ID
+        if (arpeggiatorBtn && typeof handleGenerateArpeggiator === "function") {
+            arpeggiatorBtn.onclick = handleGenerateArpeggiator;
+        } else if(arpeggiatorBtn) {
+            console.warn("handleGenerateArpeggiator function not found for 'Arpeggiator' button.");
         }
 
         const melodyBtn = document.getElementById('generateMelodyButton');

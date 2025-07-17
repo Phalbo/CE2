@@ -30,6 +30,12 @@ const CHORD_RHYTHM_PATTERNS = {
         { name: "ShuffleFeel", weight: 25, pattern: [{ duration: "4n" }, { duration: "8n" }, { duration: "4n" }, { duration: "8n" }, { duration: "4n" }, { duration: "8n" }, { duration: "4n" }, { duration: "8n" }] },
         { name: "LongAndShort", weight: 20, pattern: [{ duration: "2n." }, { duration: "2n." }] } // 2 x (6/8)
     ],
+    "4/4_two_chords": [
+        { name: "HalfHalf", weight: 100, pattern: [{ duration: "2n" }, { duration: "2n" }] }
+    ],
+    "4/4_three_chords": [
+        { name: "QuarterQuarterHalf", weight: 100, pattern: [{ duration: "4n" }, { duration: "4n" }, { duration: "2n" }] }
+    ],
     // Fallback for other time signatures - can be expanded
     "default": [
         { name: "QuarterNotesGeneric", weight: 100, pattern: [{ duration: "4n" }] } // Repeats to fill
@@ -73,8 +79,16 @@ function validateAndFixPattern(pattern, timeSignature) {
   return pattern;
 }
 
-function getChordRhythmPattern(timeSignature) {
-    const patterns = CHORD_RHYTHM_PATTERNS[timeSignature] || CHORD_RHYTHM_PATTERNS["default"];
+function getChordRhythmPattern(timeSignature, numChords) {
+    let patterns;
+    if (numChords === 2) {
+        patterns = CHORD_RHYTHM_PATTERNS[`${timeSignature}_two_chords`] || CHORD_RHYTHM_PATTERNS[timeSignature] || CHORD_RHYTHM_PATTERNS["default"];
+    } else if (numChords === 3) {
+        patterns = CHORD_RHYTHM_PATTERNS[`${timeSignature}_three_chords`] || CHORD_RHYTHM_PATTERNS[timeSignature] || CHORD_RHYTHM_PATTERNS["default"];
+    } else {
+        patterns = CHORD_RHYTHM_PATTERNS[timeSignature] || CHORD_RHYTHM_PATTERNS["default"];
+    }
+
     const totalWeight = patterns.reduce((sum, p) => sum + p.weight, 0);
     let random = Math.random() * totalWeight;
     for (const pattern of patterns) {

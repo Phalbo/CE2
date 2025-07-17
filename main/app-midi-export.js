@@ -132,9 +132,47 @@ function handleGenerateSingleTrackChordMidi() {
 
     sections.forEach(sectionData => {
         if (sectionData.mainChordSlots && sectionData.mainChordSlots.length > 0) {
-            sectionData.mainChordSlots.forEach(slot => {
+            let lastChordName = null;
+            let lastChordStartTick = 0;
+            let lastChordDuration = 0;
+
+            sectionData.mainChordSlots.forEach((slot, index) => {
                 if (slot.chordName && slot.effectiveDurationTicks > 0) {
-                    const chordDefinition = CHORD_LIB[slot.chordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(slot.chordName).root, getChordRootAndType(slot.chordName).type) : null);
+                    if (slot.chordName !== lastChordName) {
+                        if (lastChordName) {
+                            const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
+                            if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
+                                const midiNoteNumbers = chordDefinition.notes.map(noteName => {
+                                    let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
+                                    if (note.length > 1 && (note.charAt(1) === 'b')) { note = note.charAt(0) + 'b'; }
+                                    let pitch = NOTE_NAMES.indexOf(note);
+                                    if (pitch === -1) {
+                                        const sharpMap = {"Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "Ab":"G#", "Bb":"A#", "Cb":"B"};
+                                        pitch = NOTE_NAMES.indexOf(sharpMap[noteName] || noteName);
+                                    }
+                                    return (pitch !== -1) ? pitch + 48 : null;
+                                }).filter(n => n !== null);
+
+                                if (midiNoteNumbers.length > 0) {
+                                    chordMIDIEvents.push({
+                                        pitch: midiNoteNumbers,
+                                        duration: `T${Math.round(lastChordDuration)}`,
+                                        startTick: lastChordStartTick,
+                                        velocity: 60,
+                                    });
+                                }
+                            }
+                        }
+                        lastChordName = slot.chordName;
+                        lastChordStartTick = sectionData.startTick + slot.effectiveStartTickInSection;
+                        lastChordDuration = slot.effectiveDurationTicks;
+                    } else {
+                        lastChordDuration += slot.effectiveDurationTicks;
+                    }
+                }
+
+                if (index === sectionData.mainChordSlots.length - 1 && lastChordName) {
+                    const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
                     if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
                         const midiNoteNumbers = chordDefinition.notes.map(noteName => {
                             let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
@@ -150,8 +188,8 @@ function handleGenerateSingleTrackChordMidi() {
                         if (midiNoteNumbers.length > 0) {
                             chordMIDIEvents.push({
                                 pitch: midiNoteNumbers,
-                                duration: `T${Math.round(slot.effectiveDurationTicks)}`,
-                                startTick: sectionData.startTick + slot.effectiveStartTickInSection,
+                                duration: `T${Math.round(lastChordDuration)}`,
+                                startTick: lastChordStartTick,
                                 velocity: 60,
                             });
                         }
@@ -164,15 +202,40 @@ function handleGenerateSingleTrackChordMidi() {
     downloadSingleTrackMidi(`Pad for ${title}`, chordMIDIEvents, midiFileNameST, bpm, timeSignatureChanges, 0);
 }
 
-function handleGenerateChordRhythm() {
+function handleGenerateRhythmChords() {
     if (!currentMidiData || !currentMidiData.sections) { alert("Please generate a song first."); return; }
-    if (typeof generateChordRhythmEvents !== "function") { alert("Internal Error: Arpeggiator function not found."); return; }
+    if (typeof generateRhythmChordsForSong !== "function") { alert("Internal Error: Rhythm Chords generator not found."); return; }
 
-    const arpeggiatorBtn = document.getElementById('generateChordRhythmButton');
+    const rhythmChordsBtn = document.getElementById('rhythmChordsButton');
+    if (rhythmChordsBtn) { rhythmChordsBtn.disabled = true; rhythmChordsBtn.textContent = "Creating Rhythm..."; }
+
+    try {
+        const helpers = { getChordRootAndType, getChordNotes, getRandomElement, NOTE_NAMES };
+        const rhythmChordsEvents = generateRhythmChordsForSong(currentMidiData, helpers, sectionCache);
+
+        if (rhythmChordsEvents && rhythmChordsEvents.length > 0) {
+            const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Rhythm_Chords.mid`;
+            downloadSingleTrackMidi(`Rhythm Chords for ${currentMidiData.title}`, rhythmChordsEvents, fileName, currentMidiData.bpm, currentMidiData.timeSignatureChanges, 0);
+        } else {
+            alert("Could not generate rhythm chords with the current data.");
+        }
+    } catch (e) {
+        console.error("Error during rhythm chords generation:", e, e.stack);
+        alert("Critical error during rhythm chords generation. Check the console.");
+    } finally {
+        if (rhythmChordsBtn) { rhythmChordsBtn.disabled = false; rhythmChordsBtn.textContent = "Rhythm Chords"; }
+    }
+}
+
+function handleGenerateArpeggiator() {
+    if (!currentMidiData || !currentMidiData.sections) { alert("Please generate a song first."); return; }
+    if (typeof generateArpeggioEvents !== "function") { alert("Internal Error: Arpeggiator function not found."); return; }
+
+    const arpeggiatorBtn = document.getElementById('arpeggiatorButton');
     if (arpeggiatorBtn) { arpeggiatorBtn.disabled = true; arpeggiatorBtn.textContent = "Creating Arpeggio..."; }
 
     try {
-        let allRhythmicChordEvents = [];
+        let allArpeggioEvents = [];
         const helpers = { getRandomElement, getChordNotes, getChordRootAndType, getWeightedRandom };
 
         currentMidiData.sections.forEach(section => {
@@ -184,17 +247,17 @@ function handleGenerateChordRhythm() {
                         durationTicks: slot.effectiveDurationTicks,
                         timeSignature: slot.timeSignature
                     };
-                    const eventsForThisSlot = generateChordRhythmEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext);
+                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext);
                     if (eventsForThisSlot) {
-                        allRhythmicChordEvents.push(...eventsForThisSlot);
+                        allArpeggioEvents.push(...eventsForThisSlot);
                     }
                 });
             }
         });
 
-        if (allRhythmicChordEvents.length > 0) {
+        if (allArpeggioEvents.length > 0) {
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Arpeggio.mid`;
-            downloadSingleTrackMidi(`Arpeggio for ${currentMidiData.title}`, allRhythmicChordEvents, fileName, currentMidiData.bpm, currentMidiData.timeSignatureChanges, 0);
+            downloadSingleTrackMidi(`Arpeggio for ${currentMidiData.title}`, allArpeggioEvents, fileName, currentMidiData.bpm, currentMidiData.timeSignatureChanges, 0);
         } else {
             alert("Could not generate arpeggio with the current data.");
         }
