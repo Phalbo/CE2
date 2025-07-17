@@ -133,47 +133,9 @@ function handleGenerateSingleTrackChordMidi(helpers) {
 
     sections.forEach(sectionData => {
         if (sectionData.mainChordSlots && sectionData.mainChordSlots.length > 0) {
-            let lastChordName = null;
-            let lastChordStartTick = 0;
-            let lastChordDuration = 0;
-
-            sectionData.mainChordSlots.forEach((slot, index) => {
+            sectionData.mainChordSlots.forEach(slot => {
                 if (slot.chordName && slot.effectiveDurationTicks > 0) {
-                    if (slot.chordName !== lastChordName) {
-                        if (lastChordName) {
-                            const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
-                            if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
-                                const midiNoteNumbers = chordDefinition.notes.map(noteName => {
-                                    let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
-                                    if (note.length > 1 && (note.charAt(1) === 'b')) { note = note.charAt(0) + 'b'; }
-                                    let pitch = NOTE_NAMES.indexOf(note);
-                                    if (pitch === -1) {
-                                        const sharpMap = {"Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "Ab":"G#", "Bb":"A#", "Cb":"B"};
-                                        pitch = NOTE_NAMES.indexOf(sharpMap[noteName] || noteName);
-                                    }
-                                    return (pitch !== -1) ? pitch + 48 : null;
-                                }).filter(n => n !== null);
-
-                                if (midiNoteNumbers.length > 0) {
-                                    chordMIDIEvents.push({
-                                        pitch: midiNoteNumbers,
-                                        duration: `T${Math.round(lastChordDuration)}`,
-                                        startTick: lastChordStartTick,
-                                        velocity: 60,
-                                    });
-                                }
-                            }
-                        }
-                        lastChordName = slot.chordName;
-                        lastChordStartTick = sectionData.startTick + slot.effectiveStartTickInSection;
-                        lastChordDuration = slot.effectiveDurationTicks;
-                    } else {
-                        lastChordDuration += slot.effectiveDurationTicks;
-                    }
-                }
-
-                if (index === sectionData.mainChordSlots.length - 1 && lastChordName) {
-                    const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
+                    const chordDefinition = CHORD_LIB[slot.chordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(slot.chordName).root, getChordRootAndType(slot.chordName).type) : null);
                     if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
                         const midiNoteNumbers = chordDefinition.notes.map(noteName => {
                             let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
@@ -189,35 +151,11 @@ function handleGenerateSingleTrackChordMidi(helpers) {
                         if (midiNoteNumbers.length > 0) {
                             chordMIDIEvents.push({
                                 pitch: midiNoteNumbers,
-                                duration: `T${Math.round(lastChordDuration)}`,
-                                startTick: lastChordStartTick,
+                                duration: `T${Math.round(slot.effectiveDurationTicks)}`,
+                                startTick: sectionData.startTick + slot.effectiveStartTickInSection,
                                 velocity: 60,
                             });
                         }
-                    }
-                }
-            });
-            if (lastChordName && chordMIDIEvents.length > 0 && chordMIDIEvents[chordMIDIEvents.length - 1].pitch.join(',') !== getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type).notes.map(noteName => NOTE_NAMES.indexOf(noteName) + 48).join(',')) {
-                const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
-                if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
-                    const midiNoteNumbers = chordDefinition.notes.map(noteName => {
-                        let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
-                        if (note.length > 1 && (note.charAt(1) === 'b')) { note = note.charAt(0) + 'b'; }
-                        let pitch = NOTE_NAMES.indexOf(note);
-                        if (pitch === -1) {
-                            const sharpMap = {"Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "Ab":"G#", "Bb":"A#", "Cb":"B"};
-                            pitch = NOTE_NAMES.indexOf(sharpMap[noteName] || noteName);
-                        }
-                        return (pitch !== -1) ? pitch + 48 : null;
-                    }).filter(n => n !== null);
-
-                    if (midiNoteNumbers.length > 0) {
-                        chordMIDIEvents.push({
-                            pitch: midiNoteNumbers,
-                            duration: `T${Math.round(lastChordDuration)}`,
-                            startTick: lastChordStartTick,
-                            velocity: 60,
-                        });
                     }
                 }
             });
@@ -235,7 +173,7 @@ function handleGenerateRhythmChords(helpers) {
     if (rhythmChordsBtn) { rhythmChordsBtn.disabled = true; rhythmChordsBtn.textContent = "Creating Rhythm..."; }
 
     try {
-        const rhythmChordsEvents = generateRhythmChordsForSong(currentMidiData, helpers, sectionCache);
+        const rhythmChordsEvents = generateRhythmChordsForSong(currentMidiData, helpers);
 
         if (rhythmChordsEvents && rhythmChordsEvents.length > 0) {
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Rhythm_Chords.mid`;
@@ -271,7 +209,7 @@ function handleGenerateArpeggiator(helpers) {
                         durationTicks: slot.effectiveDurationTicks,
                         timeSignature: slot.timeSignature
                     };
-                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext, sectionCache);
+                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext);
                     if (eventsForThisSlot) {
                         allArpeggioEvents.push(...eventsForThisSlot);
                     }
@@ -325,8 +263,33 @@ function handleGenerateVocalLine(helpers) {
     const vocalBtn = document.getElementById('generateVocalLineButton');
     if (vocalBtn) { vocalBtn.disabled = true; vocalBtn.textContent = "Creating Vocal Line..."; }
     try {
+        // Ensure mainChordSlots are populated before generating vocals
+        if (currentMidiData.sections.some(s => !s.mainChordSlots || s.mainChordSlots.length === 0)) {
+            currentMidiData.sections.forEach(sectionData => {
+                if (!sectionData.mainChordSlots || sectionData.mainChordSlots.length === 0) {
+                    const totalTicksInSection = sectionData.measures * (4 / sectionData.timeSignature[1]) * TICKS_PER_QUARTER_NOTE_REFERENCE;
+                    const numChords = sectionData.baseChords.length;
+                    if (numChords === 0) return;
+
+                    const ticksPerChord = totalTicksInSection / numChords;
+                    let currentTickInSection = 0;
+
+                    sectionData.baseChords.forEach(chord => {
+                        sectionData.mainChordSlots.push({
+                            chordName: chord,
+                            effectiveStartTickInSection: currentTickInSection,
+                            effectiveDurationTicks: ticksPerChord,
+                            timeSignature: sectionData.timeSignature,
+                            sectionStartTick: sectionData.startTick
+                        });
+                        currentTickInSection += ticksPerChord;
+                    });
+                }
+            });
+        }
+
         const options = { globalRandomActivationProbability: 0.6 };
-        const vocalLine = generateVocalLineForSong(currentMidiData, currentMidiData.mainScaleNotes, currentMidiData.mainScaleRoot, CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats, getChordNotes, getNoteName, getRandomElement, getChordRootAndType, options, sectionCache);
+        const vocalLine = generateVocalLineForSong(currentMidiData, currentMidiData.mainScaleNotes, currentMidiData.mainScaleRoot, CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats, getChordNotes, getNoteName, getRandomElement, getChordRootAndType, options, helpers.sectionCache);
         if (vocalLine && vocalLine.length > 0) {
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Vocal.mid`;
             downloadSingleTrackMidi(`Vocal for ${currentMidiData.title}`, vocalLine, fileName, currentMidiData.bpm, currentMidiData.timeSignatureChanges, 0);
