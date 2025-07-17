@@ -133,9 +133,20 @@ function generateChordsForSection(
     const sectionChordParamsKey = cleanSectionNameForStyle === "bridge-mod" ? "bridge-mod" : cleanSectionNameForStyle;
     const sectionChordParams = SECTION_CHORD_TARGETS[sectionChordParamsKey] || SECTION_CHORD_TARGETS[getCleanSectionName(sectionName.split(" ")[0])] || SECTION_CHORD_TARGETS["default"];
 
+    let targetBaseProgressionLength;
     const minChords = sectionChordParams.typicalMin || 2;
-    const maxChords = sectionChordParams.typicalMax || 5; // Increased max to 5
-    let targetBaseProgressionLength = Math.floor(Math.random() * (maxChords - minChords + 1)) + minChords;
+    const maxChords = sectionChordParams.typicalMax || 4;
+    const randomChoice = Math.random();
+
+    if (randomChoice < 0.4) {
+        targetBaseProgressionLength = 2;
+    } else if (randomChoice < 0.8) {
+        targetBaseProgressionLength = 4;
+    } else {
+        targetBaseProgressionLength = 3;
+    }
+
+    targetBaseProgressionLength = Math.max(minChords, Math.min(targetBaseProgressionLength, maxChords));
 
     if (cleanSectionNameForStyle === "silence") targetBaseProgressionLength = 0;
 
@@ -167,11 +178,13 @@ function generateChordsForSection(
     if (!chosenPattern || chosenPattern.length === 0) chosenPattern = patterns[0] || (scales[currentModeForDiatonicGeneration]?.type === 'major' ? ['I'] : ['i']);
 
     let baseProgressionDegrees = [];
-    if (targetBaseProgressionLength > 0 && chosenPattern && chosenPattern.length > 0) {
+    if (targetBaseProgressionLength === 0) {
+        baseProgressionDegrees = [];
+    } else if (chosenPattern && chosenPattern.length > 0) {
         for (let i = 0; i < targetBaseProgressionLength; i++) {
             baseProgressionDegrees.push(chosenPattern[i % chosenPattern.length]);
         }
-    } else if (targetBaseProgressionLength > 0) {
+    } else {
         const fallbackDeg = scales[currentModeForDiatonicGeneration]?.type === 'minor' ? 'i' : 'I';
         for (let i = 0; i < targetBaseProgressionLength; i++) baseProgressionDegrees.push(fallbackDeg);
     }
@@ -395,22 +408,19 @@ async function generateSongArchitecture(helpers) {
             currentGlobalTickForTS += finalMeasures * beatsPerMeasureInSection * ticksPerBeatForThisSection;
         });
 
-        // --- FASE DI CREAZIONE DEI mainChordSlots (Logica Ritmica Avanzata) ---
+        // --- FASE DI CREAZIONE DEI mainChordSlots (Logica Semplificata e Stabile) ---
         rawMidiSectionsData.forEach(sectionData => {
             const totalTicksInSection = sectionData.measures * (4 / sectionData.timeSignature[1]) * TICKS_PER_QUARTER_NOTE_REFERENCE;
             const numChords = sectionData.baseChords.length;
-            if (numChords === 0) return;
+
+            if (numChords === 0) return; // Sezione vuota, nessun slot da creare
 
             const ticksPerChord = totalTicksInSection / numChords;
             let currentTickInSection = 0;
 
             sectionData.baseChords.forEach(chord => {
-
-                // Ensure the chord is a string before processing
-                const chordName = typeof chord === 'string' ? chord : 'C'; // Fallback chord
                 sectionData.mainChordSlots.push({
-                    chordName: chordName,
-
+                    chordName: chord,
                     effectiveStartTickInSection: currentTickInSection,
                     effectiveDurationTicks: ticksPerChord,
                     timeSignature: sectionData.timeSignature,

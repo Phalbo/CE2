@@ -1,7 +1,6 @@
 // gen/generateRhythmChordsForSong.js
 
-function generateRhythmChordsForSong(songData, helpers) {
-    const { sectionCache } = helpers;
+function generateRhythmChordsForSong(songData, helpers, sectionCache) {
     const chordEvents = [];
     let lastEvent = null;
 
@@ -25,28 +24,29 @@ function generateRhythmChordsForSong(songData, helpers) {
             const { chordName, effectiveDurationTicks, timeSignature, effectiveStartTickInSection, startTick } = slot;
             const { getChordRootAndType, getChordNotes, getRandomElement, NOTE_NAMES, getWeightedRandom } = helpers;
 
+            // 1. Initialize pitches early to prevent ReferenceError
+            const { root, type } = getChordRootAndType(chordName);
+            const chordNotes = getChordNotes(root, type).notes;
+            const pitches = chordNotes.map(note => NOTE_NAMES.indexOf(note) + 48);
+
             const ts = `${timeSignature[0]}/${timeSignature[1]}`;
             const patternsForTs = RHYTHM_PATTERNS[ts] || RHYTHM_PATTERNS['default'];
 
             if (!patternsForTs || patternsForTs.length === 0) {
                 console.error(`No rhythm patterns found for time signature ${ts} or default.`);
-                return; // Skip this slot if no patterns are available
+                return;
             }
 
-
-            const patternWeights = patternsForTs.reduce((acc, p) => {
-                acc[p.name] = p.weight;
-                return acc;
-            }, {});
-
-
-            const chosenPatternName = getWeightedRandom(patternWeights);
+            // 2. Correctly get a random pattern name from the list of available patterns
+            const availablePatternNames = patternsForTs.map(p => p.name);
+            const chosenPatternName = getRandomElement(availablePatternNames); // Use simple random choice for stability
             const chosenPatternObject = patternsForTs.find(p => p.name === chosenPatternName);
 
-            if (!chosenPatternObject) {
-                console.error(`Could not find pattern object for name: ${chosenPatternName}`);
+            console.log(`Chosen pattern for ${chordName}: ${chosenPatternName}`); // Verification log
 
-                // Fallback to a simple rhythm if pattern not found
+            if (!chosenPatternObject) {
+                console.error(`Could not find pattern object for name: ${chosenPatternName}. Applying fallback.`);
+                // Fallback to a single sustained note
                 sectionChords.push({
                     pitch: pitches,
                     duration: `T${effectiveDurationTicks}`,
@@ -55,13 +55,8 @@ function generateRhythmChordsForSong(songData, helpers) {
                 });
                 return;
             }
+
             const patternSteps = chosenPatternObject.steps;
-
-
-            const { root, type } = getChordRootAndType(chordName);
-            const chordNotes = getChordNotes(root, type).notes;
-            const pitches = chordNotes.map(note => NOTE_NAMES.indexOf(note) + 48);
-
             const stepDuration = effectiveDurationTicks / patternSteps.length;
 
             patternSteps.forEach((step, stepIndex) => {
