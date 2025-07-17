@@ -27,8 +27,22 @@ function generateRhythmChordsForSong(songData, helpers) {
 
             const ts = `${timeSignature[0]}/${timeSignature[1]}`;
             const patternsForTs = RHYTHM_PATTERNS[ts] || RHYTHM_PATTERNS['default'];
-            const chosenPattern = getWeightedRandom(patternsForTs.reduce((acc, p) => { acc[p.name] = p.weight; return acc; }, {}));
-            const patternSteps = patternsForTs.find(p => p.name === chosenPattern).steps;
+
+            if (!patternsForTs || patternsForTs.length === 0) {
+                console.error(`No rhythm patterns found for time signature ${ts} or default.`);
+                return; // Skip this slot if no patterns are available
+            }
+
+            const patternWeights = patternsForTs.reduce((acc, p) => { acc[p.name] = p.weight; return acc; }, {});
+            const chosenPatternName = getWeightedRandom(patternWeights);
+            const chosenPatternObject = patternsForTs.find(p => p.name === chosenPatternName);
+
+            if (!chosenPatternObject) {
+                console.error(`Could not find pattern object for name: ${chosenPatternName}`);
+                return; // Skip if the pattern object isn't found
+            }
+            const patternSteps = chosenPatternObject.steps;
+
 
             const { root, type } = getChordRootAndType(chordName);
             const chordNotes = getChordNotes(root, type).notes;

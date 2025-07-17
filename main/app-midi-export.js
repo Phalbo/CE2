@@ -263,8 +263,33 @@ function handleGenerateVocalLine(helpers) {
     const vocalBtn = document.getElementById('generateVocalLineButton');
     if (vocalBtn) { vocalBtn.disabled = true; vocalBtn.textContent = "Creating Vocal Line..."; }
     try {
+        // Ensure mainChordSlots are populated before generating vocals
+        if (currentMidiData.sections.some(s => !s.mainChordSlots || s.mainChordSlots.length === 0)) {
+            currentMidiData.sections.forEach(sectionData => {
+                if (!sectionData.mainChordSlots || sectionData.mainChordSlots.length === 0) {
+                    const totalTicksInSection = sectionData.measures * (4 / sectionData.timeSignature[1]) * TICKS_PER_QUARTER_NOTE_REFERENCE;
+                    const numChords = sectionData.baseChords.length;
+                    if (numChords === 0) return;
+
+                    const ticksPerChord = totalTicksInSection / numChords;
+                    let currentTickInSection = 0;
+
+                    sectionData.baseChords.forEach(chord => {
+                        sectionData.mainChordSlots.push({
+                            chordName: chord,
+                            effectiveStartTickInSection: currentTickInSection,
+                            effectiveDurationTicks: ticksPerChord,
+                            timeSignature: sectionData.timeSignature,
+                            sectionStartTick: sectionData.startTick
+                        });
+                        currentTickInSection += ticksPerChord;
+                    });
+                }
+            });
+        }
+
         const options = { globalRandomActivationProbability: 0.6 };
-        const vocalLine = generateVocalLineForSong(currentMidiData, currentMidiData.mainScaleNotes, currentMidiData.mainScaleRoot, CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats, getChordNotes, getNoteName, getRandomElement, getChordRootAndType, options, sectionCache);
+        const vocalLine = generateVocalLineForSong(currentMidiData, currentMidiData.mainScaleNotes, currentMidiData.mainScaleRoot, CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats, getChordNotes, getNoteName, getRandomElement, getChordRootAndType, options, helpers.sectionCache);
         if (vocalLine && vocalLine.length > 0) {
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Vocal.mid`;
             downloadSingleTrackMidi(`Vocal for ${currentMidiData.title}`, vocalLine, fileName, currentMidiData.bpm, currentMidiData.timeSignatureChanges, 0);

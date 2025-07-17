@@ -167,13 +167,11 @@ function generateChordsForSection(
     if (!chosenPattern || chosenPattern.length === 0) chosenPattern = patterns[0] || (scales[currentModeForDiatonicGeneration]?.type === 'major' ? ['I'] : ['i']);
 
     let baseProgressionDegrees = [];
-    if (targetBaseProgressionLength === 0) {
-        baseProgressionDegrees = [];
-    } else if (chosenPattern && chosenPattern.length > 0) {
+    if (targetBaseProgressionLength > 0 && chosenPattern && chosenPattern.length > 0) {
         for (let i = 0; i < targetBaseProgressionLength; i++) {
             baseProgressionDegrees.push(chosenPattern[i % chosenPattern.length]);
         }
-    } else {
+    } else if (targetBaseProgressionLength > 0) {
         const fallbackDeg = scales[currentModeForDiatonicGeneration]?.type === 'minor' ? 'i' : 'I';
         for (let i = 0; i < targetBaseProgressionLength; i++) baseProgressionDegrees.push(fallbackDeg);
     }
@@ -407,8 +405,12 @@ async function generateSongArchitecture(helpers) {
             let currentTickInSection = 0;
 
             sectionData.baseChords.forEach(chord => {
+
+                // Ensure the chord is a string before processing
+                const chordName = typeof chord === 'string' ? chord : 'C'; // Fallback chord
                 sectionData.mainChordSlots.push({
-                    chordName: chord,
+                    chordName: chordName,
+
                     effectiveStartTickInSection: currentTickInSection,
                     effectiveDurationTicks: ticksPerChord,
                     timeSignature: sectionData.timeSignature,
