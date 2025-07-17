@@ -403,18 +403,20 @@ button#generateButton:disabled {
 /* Colori specifici per i pulsanti di azione (tramite ID) */
 button#saveSongButton { background-color: var(--btn-save-bg); color: var(--text-on-accent-dark); border-color: var(--btn-save-hover-bg); }
 button#saveSongButton:hover { background-color: var(--btn-save-hover-bg); }
-button#generateChordsPadMidiButton { background-color: var(--btn-chords-pad-bg); color: var(--btn-chords-pad-text); border-color: var(--btn-chords-pad-hover-bg); }
-button#generateChordsPadMidiButton:hover { background-color: var(--btn-chords-pad-hover-bg); }
-button#generateChordsRhythmMidiButton { background-color: var(--btn-chords-rhythm-bg); color: var(--btn-chords-rhythm-text); border-color: var(--btn-chords-rhythm-hover-bg); }
-button#generateChordsRhythmMidiButton:hover { background-color: var(--btn-chords-rhythm-hover-bg); }
-button#generateMelodyMidiButton { background-color: var(--btn-melody-bg); color: var(--text-on-accent-dark); border-color: var(--btn-melody-hover-bg); }
-button#generateMelodyMidiButton:hover { background-color: var(--btn-melody-hover-bg); }
-button#generateVocalMidiButton { background-color: var(--btn-vocal-bg); color: var(--text-on-accent-dark); border-color: var(--btn-vocal-hover-bg); }
-button#generateVocalMidiButton:hover { background-color: var(--btn-vocal-hover-bg); }
-button#generateBassLineMidiButton { background-color: var(--btn-bass-bg); color: var(--text-on-accent-dark); border-color: var(--btn-bass-hover-bg); }
-button#generateBassLineMidiButton:hover { background-color: var(--btn-bass-hover-bg); }
-button#generateDrumsMidiButton { background-color: var(--btn-drums-bg); color: var(--text-on-accent-dark); border-color: var(--btn-drums-hover-bg); }
-button#generateDrumsMidiButton:hover { background-color: var(--btn-drums-hover-bg); }
+button#downloadSingleTrackChordMidiButton { background-color: var(--btn-chords-pad-bg); color: var(--btn-chords-pad-text); border-color: var(--btn-chords-pad-hover-bg); }
+button#downloadSingleTrackChordMidiButton:hover { background-color: var(--btn-chords-pad-hover-bg); }
+button#rhythmChordsButton { background-color: var(--btn-chords-rhythm-bg); color: var(--btn-chords-rhythm-text); border-color: var(--btn-chords-rhythm-hover-bg); }
+button#rhythmChordsButton:hover { background-color: var(--btn-chords-rhythm-hover-bg); }
+button#generateChordRhythmButton { background-color: var(--btn-melody-bg); color: var(--text-on-accent-dark); border-color: var(--btn-melody-hover-bg); }
+button#generateChordRhythmButton:hover { background-color: var(--btn-melody-hover-bg); }
+button#generateMelodyButton { background-color: var(--btn-vocal-bg); color: var(--text-on-accent-dark); border-color: var(--btn-vocal-hover-bg); }
+button#generateMelodyButton:hover { background-color: var(--btn-vocal-hover-bg); }
+button#generateVocalLineButton { background-color: var(--btn-bass-bg); color: var(--text-on-accent-dark); border-color: var(--btn-bass-hover-bg); }
+button#generateVocalLineButton:hover { background-color: var(--btn-bass-hover-bg); }
+button#generateBassLineButton { background-color: var(--btn-drums-bg); color: var(--text-on-accent-dark); border-color: var(--btn-drums-hover-bg); }
+button#generateBassLineButton:hover { background-color: var(--btn-drums-hover-bg); }
+button#generateDrumTrackButton { background-color: var(--btn-drums-bg); color: var(--text-on-accent-dark); border-color: var(--btn-drums-hover-bg); }
+button#generateDrumTrackButton:hover { background-color: var(--btn-drums-hover-bg); }
 
 .action-buttons-container button.action-button:disabled {
   background-color: var(--btn-disabled-bg) !important; color: var(--btn-disabled-text) !important;

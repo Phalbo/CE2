@@ -218,19 +218,19 @@ function generateChordsForSection(
     });
 
     if (songData && songData.enableModalInterchange && MOOD_PROFILES[mood]?.allowedModalBorrowing) {
-        const interchangeChords = getInterchangeChords(keyRoot, currentModeForDiatonicGeneration);
-        if (interchangeChords.length > 0) {
-            finalBaseProgression = finalBaseProgression.map(chord => {
-                if (Math.random() < 0.2) { // 20% di probabilità di sostituire l'accordo
+        finalBaseProgression = finalBaseProgression.map(chord => {
+            if (Math.random() < 0.2) { // 20% di probabilità di sostituire l'accordo
+                const interchangeChords = getInterchangeChordsForChord(keyRoot, currentModeForDiatonicGeneration, chord);
+                if (interchangeChords.length > 0) {
                     const randomInterchangeChord = getRandomElement(interchangeChords);
                     if (randomInterchangeChord) {
                         allGeneratedChordsSet.add(randomInterchangeChord.chord);
                         return randomInterchangeChord.chord;
                     }
                 }
-                return chord;
-            });
-        }
+            }
+            return chord;
+        });
     }
 
   if (progressionCache) {
@@ -416,7 +416,7 @@ async function generateSongArchitecture() {
             let currentTickInSection = 0;
 
             for (let i = 0; i < sectionData.measures; i++) {
-                const rhythmPattern = getChordRhythmPattern(timeSignatureStr);
+                const rhythmPattern = getChordRhythmPattern(timeSignatureStr, sectionData.baseChords.length);
                 const validatedPattern = validateAndFixPattern(rhythmPattern.pattern, timeSignatureStr);
                 const chordEvents = expandChordRhythm(validatedPattern, sectionData.baseChords);
 
