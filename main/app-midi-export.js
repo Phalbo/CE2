@@ -133,47 +133,9 @@ function handleGenerateSingleTrackChordMidi(helpers) {
 
     sections.forEach(sectionData => {
         if (sectionData.mainChordSlots && sectionData.mainChordSlots.length > 0) {
-            let lastChordName = null;
-            let lastChordStartTick = 0;
-            let lastChordDuration = 0;
-
-            sectionData.mainChordSlots.forEach((slot, index) => {
+            sectionData.mainChordSlots.forEach(slot => {
                 if (slot.chordName && slot.effectiveDurationTicks > 0) {
-                    if (slot.chordName !== lastChordName) {
-                        if (lastChordName) {
-                            const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
-                            if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
-                                const midiNoteNumbers = chordDefinition.notes.map(noteName => {
-                                    let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
-                                    if (note.length > 1 && (note.charAt(1) === 'b')) { note = note.charAt(0) + 'b'; }
-                                    let pitch = NOTE_NAMES.indexOf(note);
-                                    if (pitch === -1) {
-                                        const sharpMap = {"Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "Ab":"G#", "Bb":"A#", "Cb":"B"};
-                                        pitch = NOTE_NAMES.indexOf(sharpMap[noteName] || noteName);
-                                    }
-                                    return (pitch !== -1) ? pitch + 48 : null;
-                                }).filter(n => n !== null);
-
-                                if (midiNoteNumbers.length > 0) {
-                                    chordMIDIEvents.push({
-                                        pitch: midiNoteNumbers,
-                                        duration: `T${Math.round(lastChordDuration)}`,
-                                        startTick: lastChordStartTick,
-                                        velocity: 60,
-                                    });
-                                }
-                            }
-                        }
-                        lastChordName = slot.chordName;
-                        lastChordStartTick = sectionData.startTick + slot.effectiveStartTickInSection;
-                        lastChordDuration = slot.effectiveDurationTicks;
-                    } else {
-                        lastChordDuration += slot.effectiveDurationTicks;
-                    }
-                }
-
-                if (index === sectionData.mainChordSlots.length - 1 && lastChordName) {
-                    const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
+                    const chordDefinition = CHORD_LIB[slot.chordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(slot.chordName).root, getChordRootAndType(slot.chordName).type) : null);
                     if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
                         const midiNoteNumbers = chordDefinition.notes.map(noteName => {
                             let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
@@ -189,17 +151,14 @@ function handleGenerateSingleTrackChordMidi(helpers) {
                         if (midiNoteNumbers.length > 0) {
                             chordMIDIEvents.push({
                                 pitch: midiNoteNumbers,
-                                duration: `T${Math.round(lastChordDuration)}`,
-                                startTick: lastChordStartTick,
+                                duration: `T${Math.round(slot.effectiveDurationTicks)}`,
+                                startTick: sectionData.startTick + slot.effectiveStartTickInSection,
                                 velocity: 60,
                             });
                         }
                     }
                 }
             });
-            // This entire block seems to be a leftover from a previous implementation.
-            // It's causing a syntax error because of the dangling `});`
-            // I will remove it completely.
         }
     });
     const midiFileNameST = `${title.replace(/[^a-zA-Z0-9_]/g, '_')}_Pad.mid`;

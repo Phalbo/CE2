@@ -133,20 +133,9 @@ function generateChordsForSection(
     const sectionChordParamsKey = cleanSectionNameForStyle === "bridge-mod" ? "bridge-mod" : cleanSectionNameForStyle;
     const sectionChordParams = SECTION_CHORD_TARGETS[sectionChordParamsKey] || SECTION_CHORD_TARGETS[getCleanSectionName(sectionName.split(" ")[0])] || SECTION_CHORD_TARGETS["default"];
 
-    let targetBaseProgressionLength;
     const minChords = sectionChordParams.typicalMin || 2;
-    const maxChords = sectionChordParams.typicalMax || 4;
-    const randomChoice = Math.random();
-
-    if (randomChoice < 0.4) {
-        targetBaseProgressionLength = 2;
-    } else if (randomChoice < 0.8) {
-        targetBaseProgressionLength = 4;
-    } else {
-        targetBaseProgressionLength = 3;
-    }
-
-    targetBaseProgressionLength = Math.max(minChords, Math.min(targetBaseProgressionLength, maxChords));
+    const maxChords = sectionChordParams.typicalMax || 5; // Increased max to 5
+    let targetBaseProgressionLength = Math.floor(Math.random() * (maxChords - minChords + 1)) + minChords;
 
     if (cleanSectionNameForStyle === "silence") targetBaseProgressionLength = 0;
 
@@ -410,26 +399,23 @@ async function generateSongArchitecture(helpers) {
 
         // --- FASE DI CREAZIONE DEI mainChordSlots (Logica Ritmica Avanzata) ---
         rawMidiSectionsData.forEach(sectionData => {
-            const timeSignatureStr = `${sectionData.timeSignature[0]}/${sectionData.timeSignature[1]}`;
+            const totalTicksInSection = sectionData.measures * (4 / sectionData.timeSignature[1]) * TICKS_PER_QUARTER_NOTE_REFERENCE;
+            const numChords = sectionData.baseChords.length;
+            if (numChords === 0) return;
+
+            const ticksPerChord = totalTicksInSection / numChords;
             let currentTickInSection = 0;
 
-            for (let i = 0; i < sectionData.measures; i++) {
-                const rhythmPattern = getChordRhythmPattern(timeSignatureStr, sectionData.baseChords.length);
-                const validatedPattern = validateAndFixPattern(rhythmPattern.pattern, timeSignatureStr);
-                const chordEvents = expandChordRhythm(validatedPattern, sectionData.baseChords);
-
-                for (const event of chordEvents) {
-                    const durationTicks = MIDI_DURATION_TO_TICKS[event.duration] || TICKS_PER_QUARTER_NOTE_REFERENCE;
-                    sectionData.mainChordSlots.push({
-                        chordName: event.chord,
-                        effectiveStartTickInSection: currentTickInSection,
-                        effectiveDurationTicks: durationTicks,
-                        timeSignature: sectionData.timeSignature,
-                        sectionStartTick: sectionData.startTick
-                    });
-                    currentTickInSection += durationTicks;
-                }
-            }
+            sectionData.baseChords.forEach(chord => {
+                sectionData.mainChordSlots.push({
+                    chordName: chord,
+                    effectiveStartTickInSection: currentTickInSection,
+                    effectiveDurationTicks: ticksPerChord,
+                    timeSignature: sectionData.timeSignature,
+                    sectionStartTick: sectionData.startTick
+                });
+                currentTickInSection += ticksPerChord;
+            });
         });
         // --- FINE FASE DI CREAZIONE mainChordSlots ---
 
