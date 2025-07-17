@@ -243,7 +243,8 @@ function generateChordsForSection(
  * Modificata per includere la fase di "Arrangiamento Ritmico-Armonico"
  * e la creazione di 'mainChordSlots'.
  */
-async function generateSongArchitecture() {
+async function generateSongArchitecture(helpers) {
+    const { getScaleNotes, getDiatonicChords, colorizeChord, getInterchangeChords, getRandomElement, getNoteName, getChordRootAndType } = helpers;
     const generateButton = document.getElementById('generateButton');
     const songOutputDiv = document.getElementById('songOutput');
 
