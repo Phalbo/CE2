@@ -33,13 +33,27 @@ function generateRhythmChordsForSong(songData, helpers) {
                 return; // Skip this slot if no patterns are available
             }
 
-            const patternWeights = patternsForTs.reduce((acc, p) => { acc[p.name] = p.weight; return acc; }, {});
+
+            const patternWeights = patternsForTs.reduce((acc, p) => {
+                acc[p.name] = p.weight;
+                return acc;
+            }, {});
+
+
             const chosenPatternName = getWeightedRandom(patternWeights);
             const chosenPatternObject = patternsForTs.find(p => p.name === chosenPatternName);
 
             if (!chosenPatternObject) {
                 console.error(`Could not find pattern object for name: ${chosenPatternName}`);
-                return; // Skip if the pattern object isn't found
+
+                // Fallback to a simple rhythm if pattern not found
+                sectionChords.push({
+                    pitch: pitches,
+                    duration: `T${effectiveDurationTicks}`,
+                    startTick: startTick + effectiveStartTickInSection,
+                    velocity: 60
+                });
+                return;
             }
             const patternSteps = chosenPatternObject.steps;
 
