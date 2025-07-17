@@ -165,7 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
         NOTE_NAMES,
         allNotesWithFlats,
         scales,
-        CHORD_LIB
+        CHORD_LIB,
+        sectionCache
     };
 
     // --- Event Listener principale ---

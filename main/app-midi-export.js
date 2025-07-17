@@ -235,7 +235,7 @@ function handleGenerateRhythmChords(helpers) {
     if (rhythmChordsBtn) { rhythmChordsBtn.disabled = true; rhythmChordsBtn.textContent = "Creating Rhythm..."; }
 
     try {
-        const rhythmChordsEvents = generateRhythmChordsForSong(currentMidiData, helpers, sectionCache);
+        const rhythmChordsEvents = generateRhythmChordsForSong(currentMidiData, helpers);
 
         if (rhythmChordsEvents && rhythmChordsEvents.length > 0) {
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Rhythm_Chords.mid`;
@@ -271,7 +271,7 @@ function handleGenerateArpeggiator(helpers) {
                         durationTicks: slot.effectiveDurationTicks,
                         timeSignature: slot.timeSignature
                     };
-                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext, sectionCache);
+                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext);
                     if (eventsForThisSlot) {
                         allArpeggioEvents.push(...eventsForThisSlot);
                     }
