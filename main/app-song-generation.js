@@ -133,25 +133,22 @@ function generateChordsForSection(
     const sectionChordParamsKey = cleanSectionNameForStyle === "bridge-mod" ? "bridge-mod" : cleanSectionNameForStyle;
     const sectionChordParams = SECTION_CHORD_TARGETS[sectionChordParamsKey] || SECTION_CHORD_TARGETS[getCleanSectionName(sectionName.split(" ")[0])] || SECTION_CHORD_TARGETS["default"];
 
-    let targetBaseProgressionLength = typeof getRandomElement === 'function' ?
-        getRandomElement( Array.from({length: sectionChordParams.typicalMax - sectionChordParams.typicalMin + 1}, (_, i) => sectionChordParams.typicalMin + i) )
-        : sectionChordParams.typicalMin;
-    targetBaseProgressionLength = targetBaseProgressionLength || sectionChordParams.typicalMin;
+    let targetBaseProgressionLength;
+    const minChords = sectionChordParams.typicalMin || 2;
+    const maxChords = sectionChordParams.typicalMax || 4;
+    const randomChoice = Math.random();
 
-    const minObs = sectionChordParams.minObserved !== undefined ? sectionChordParams.minObserved : 1;
-    const maxObs = sectionChordParams.maxObserved !== undefined ? sectionChordParams.maxObserved : 4;
-
-    if (minObs === 0 && maxObs === 0) {
-        targetBaseProgressionLength = 0;
+    if (randomChoice < 0.4) {
+        targetBaseProgressionLength = 2;
+    } else if (randomChoice < 0.8) {
+        targetBaseProgressionLength = 4;
     } else {
-        targetBaseProgressionLength = Math.max(minObs, Math.min(targetBaseProgressionLength, Math.max(sectionChordParams.typicalMax, maxObs) ));
+        targetBaseProgressionLength = 3;
     }
-    if (targetBaseProgressionLength === 0 && cleanSectionNameForStyle !== "silence") {
-        targetBaseProgressionLength = 1;
-    }
+
+    targetBaseProgressionLength = Math.max(minChords, Math.min(targetBaseProgressionLength, maxChords));
 
     if (cleanSectionNameForStyle === "silence") targetBaseProgressionLength = 0;
-    targetBaseProgressionLength = Math.max(targetBaseProgressionLength, (minObs > 0 && targetBaseProgressionLength === 0 ? 1 : 0));
 
 
     let patterns = [];

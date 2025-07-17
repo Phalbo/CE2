@@ -381,23 +381,36 @@ button#generateButton:disabled {
 .action-buttons-container::-webkit-scrollbar-track { background: var(--bg-tertiary); }
 .action-buttons-container::-webkit-scrollbar-thumb { background-color: var(--accent-primary-hover); border-radius: 4px; }
 
-.action-buttons-container button.action-button { /* Classe comune per tutti i pulsanti azione */
-  padding: var(--space-xs) var(--space-sm); font-size: 0.85em;
-  font-family: var(--font-headings); text-transform: uppercase;
-  letter-spacing: 0.8px; font-weight: 600;
-  border-radius: var(--border-radius-sm); cursor: pointer;
-  transition: var(--transition-std); border: 2px solid transparent;
-  box-shadow: var(--box-shadow-md); min-width: 135px; max-width: 160px;
-  text-align: center; flex-shrink: 0;
+.action-buttons-container button {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.85em;
+  font-family: var(--font-headings);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: var(--transition-std);
+  border: 2px solid transparent;
+  box-shadow: var(--box-shadow-md);
+  min-width: 135px;
+  max-width: 160px;
+  text-align: center;
+  flex-shrink: 0;
 }
-.action-buttons-container button.action-button:hover {
-  transform: translateY(-3px); box-shadow: var(--box-shadow-lg); filter: brightness(1.15);
+.action-buttons-container button:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--box-shadow-lg);
+  filter: brightness(1.15);
 }
-.action-buttons-container button.action-button:active {
-  transform: translateY(-1px); box-shadow: var(--box-shadow-sm); filter: brightness(0.9);
+.action-buttons-container button:active {
+  transform: translateY(-1px);
+  box-shadow: var(--box-shadow-sm);
+  filter: brightness(0.9);
 }
-.action-buttons-container button.action-button:focus-visible {
-  outline: none; box-shadow: 0 0 0 3px var(--accent-primary-focus-shadow), var(--box-shadow-lg);
+.action-buttons-container button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-primary-focus-shadow), var(--box-shadow-lg);
 }
 
 /* Colori specifici per i pulsanti di azione (tramite ID) */

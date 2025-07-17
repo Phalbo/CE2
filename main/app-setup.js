@@ -24,30 +24,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveSongButton = document.createElement('button');
     saveSongButton.id = 'saveSongButton'; saveSongButton.textContent = 'Save Details';
     saveSongButton.style.display = 'none'; saveSongButton.type = 'button';
-    saveSongButton.classList.add('action-button');
     actionButtonsContainer.appendChild(saveSongButton);
 
     const downloadSingleTrackChordMidiButton = document.createElement('button');
     downloadSingleTrackChordMidiButton.id = 'downloadSingleTrackChordMidiButton';
     downloadSingleTrackChordMidiButton.textContent = 'Chord Pad';
     downloadSingleTrackChordMidiButton.style.display = 'none'; downloadSingleTrackChordMidiButton.type = 'button';
-    downloadSingleTrackChordMidiButton.classList.add('action-button');
     actionButtonsContainer.appendChild(downloadSingleTrackChordMidiButton);
 
     const rhythmChordsButton = document.createElement('button');
     rhythmChordsButton.id = 'rhythmChordsButton';
     rhythmChordsButton.textContent = 'Rhythm Chords';
     rhythmChordsButton.style.display = 'none'; rhythmChordsButton.type = 'button';
-    rhythmChordsButton.classList.add('action-button');
     actionButtonsContainer.appendChild(rhythmChordsButton);
 
-    // NUOVO PULSANTE per "Arpeggiator"
     const arpeggiatorButton = document.createElement('button');
-    arpeggiatorButton.id = 'arpeggiatorButton'; // ID per il nuovo pulsante
+    arpeggiatorButton.id = 'arpeggiatorButton';
     arpeggiatorButton.textContent = 'Arpeggiator';
     arpeggiatorButton.style.display = 'none'; arpeggiatorButton.type = 'button';
-    arpeggiatorButton.classList.add('action-button');
-    actionButtonsContainer.appendChild(arpeggiatorButton); // Assicurati che sia aggiunto qui!
+    actionButtonsContainer.appendChild(arpeggiatorButton);
 
     // Rimuovi esplicitamente il vecchio pulsante "Chords (multitrack)" se esistesse nel DOM
     // Questo previene che un vecchio elemento HTML interferisca.
