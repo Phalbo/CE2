@@ -125,9 +125,10 @@ function downloadSingleTrackMidi(trackName, midiEvents, fileName, bpm, timeSigna
     document.body.removeChild(link);
 }
 
-function handleGenerateSingleTrackChordMidi() {
+function handleGenerateSingleTrackChordMidi(helpers) {
     if (!currentMidiData || !currentMidiData.sections) { alert("Please generate a song first."); return; }
     const { title, bpm, sections, timeSignatureChanges } = currentMidiData;
+    const { getChordNotes, getChordRootAndType, NOTE_NAMES, CHORD_LIB } = helpers;
     const chordMIDIEvents = [];
 
     sections.forEach(sectionData => {
@@ -226,7 +227,7 @@ function handleGenerateSingleTrackChordMidi() {
     downloadSingleTrackMidi(`Pad for ${title}`, chordMIDIEvents, midiFileNameST, bpm, timeSignatureChanges, 0);
 }
 
-function handleGenerateRhythmChords() {
+function handleGenerateRhythmChords(helpers) {
     if (!currentMidiData || !currentMidiData.sections) { alert("Please generate a song first."); return; }
     if (typeof generateRhythmChordsForSong !== "function") { alert("Internal Error: Rhythm Chords generator not found."); return; }
 
@@ -234,7 +235,6 @@ function handleGenerateRhythmChords() {
     if (rhythmChordsBtn) { rhythmChordsBtn.disabled = true; rhythmChordsBtn.textContent = "Creating Rhythm..."; }
 
     try {
-        const helpers = { getChordRootAndType, getChordNotes, getRandomElement, NOTE_NAMES };
         const rhythmChordsEvents = generateRhythmChordsForSong(currentMidiData, helpers, sectionCache);
 
         if (rhythmChordsEvents && rhythmChordsEvents.length > 0) {
@@ -251,7 +251,7 @@ function handleGenerateRhythmChords() {
     }
 }
 
-function handleGenerateArpeggiator() {
+function handleGenerateArpeggiator(helpers) {
     if (!currentMidiData || !currentMidiData.sections) { alert("Please generate a song first."); return; }
     if (typeof generateArpeggioEvents !== "function") { alert("Internal Error: Arpeggiator function not found."); return; }
 
@@ -260,7 +260,7 @@ function handleGenerateArpeggiator() {
 
     try {
         let allArpeggioEvents = [];
-        const helpers = { getRandomElement, getChordNotes, getChordRootAndType, getWeightedRandom };
+        const { CHORD_LIB, NOTE_NAMES } = helpers;
 
         currentMidiData.sections.forEach(section => {
             if (section.mainChordSlots && section.mainChordSlots.length > 0) {
@@ -293,11 +293,12 @@ function handleGenerateArpeggiator() {
     }
 }
 
-function handleGenerateMelody() {
+function handleGenerateMelody(helpers) {
     if (!currentMidiData || !currentMidiData.sections || !currentMidiData.mainScaleNotes || currentMidiData.mainScaleNotes.length === 0) {
         alert("Song data is missing. Please generate a full structure first."); return;
     }
     if (typeof generateMelodyForSong !== "function") { alert("Internal Error: Melody generator not found."); return; }
+    const { CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats, getChordNotes, getNoteName, getRandomElement, getChordRootAndType } = helpers;
 
     const melodyBtn = document.getElementById('generateMelodyButton');
     if(melodyBtn) { melodyBtn.disabled = true; melodyBtn.textContent = "Creating Melody...";}
@@ -314,11 +315,12 @@ function handleGenerateMelody() {
     finally { if(melodyBtn){ melodyBtn.disabled = false; melodyBtn.textContent = "Inspiration (Melody)"; } }
 }
 
-function handleGenerateVocalLine() {
+function handleGenerateVocalLine(helpers) {
     if (!currentMidiData || !currentMidiData.sections || !currentMidiData.mainScaleNotes || currentMidiData.mainScaleNotes.length === 0) {
         alert("Song data is missing. Please generate a full structure first."); return;
     }
     if (typeof generateVocalLineForSong !== "function") { alert("Internal Error: Vocal generator not found."); return; }
+    const { CHORD_LIB, scales, NOTE_NAMES, allNotesWithFlats, getChordNotes, getNoteName, getRandomElement, getChordRootAndType } = helpers;
 
     const vocalBtn = document.getElementById('generateVocalLineButton');
     if (vocalBtn) { vocalBtn.disabled = true; vocalBtn.textContent = "Creating Vocal Line..."; }
@@ -336,15 +338,7 @@ function handleGenerateVocalLine() {
     finally { if (vocalBtn) { vocalBtn.disabled = false; vocalBtn.textContent = "Vocal Shame Machine"; } }
 }
 
-function getScaleNotes(root, scale) {
-    const scaleData = scales[scale];
-    if (!scaleData) return [];
-    const rootIndex = NOTE_NAMES.indexOf(root);
-    if (rootIndex === -1) return [];
-    return scaleData.intervals.map(interval => NOTE_NAMES[(rootIndex + interval) % 12]);
-}
-
-function handleGenerateBassLine() {
+function handleGenerateBassLine(helpers) {
     if (!currentMidiData || !currentMidiData.sections || !currentMidiData.mainScaleNotes || currentMidiData.mainScaleNotes.length === 0) {
         alert("Song data is missing. Please generate a full structure first."); return;
     }
@@ -353,7 +347,6 @@ function handleGenerateBassLine() {
     const bassBtn = document.getElementById('generateBassLineButton');
     if (bassBtn) { bassBtn.disabled = true; bassBtn.textContent = "Creating Bass Line..."; }
     try {
-        const helpers = { getChordRootAndType, getChordNotes, getScaleNotes, getRandomElement, getDiatonicChords, NOTE_NAMES };
         const bassLine = generateBassLineForSong(currentMidiData, helpers, sectionCache);
         if (bassLine && bassLine.length > 0) {
             const fileName = `${currentMidiData.title.replace(/[^a-zA-Z0-9_]/g, '_')}_Bass.mid`;
@@ -366,11 +359,12 @@ function handleGenerateBassLine() {
     finally { if (bassBtn) { bassBtn.disabled = false; bassBtn.textContent = "Deekonizer (bass)"; } }
 }
 
-function handleGenerateDrumTrack() {
+function handleGenerateDrumTrack(helpers) {
     if (!currentMidiData || !currentMidiData.sections || currentMidiData.sections.length === 0 || !currentMidiData.bpm || !currentMidiData.timeSignatureChanges) {
         alert("Song data is missing. Please generate a full structure first."); return;
     }
     if (typeof generateDrumTrackForSong !== "function") { alert("Internal Error: Drum generator not found."); return; }
+    const { CHORD_LIB, NOTE_NAMES, getRandomElement } = helpers;
 
     const drumBtn = document.getElementById('generateDrumTrackButton');
     if (drumBtn) { drumBtn.disabled = true; drumBtn.textContent = "Creating Drum Track..."; }

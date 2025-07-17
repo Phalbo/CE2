@@ -150,10 +150,28 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error("buildChordLibrary function not found! Chord functionalities will be limited.");
     }
 
+    const helpers = {
+        getRandomElement,
+        getNoteName,
+        getChordRootAndType,
+        getChordNotes,
+        getScaleNotesText,
+        getDiatonicChords,
+        colorizeChord,
+        generateSectionMeasures,
+        generateBPM,
+        getInversionNotes,
+        getWeightedRandom,
+        NOTE_NAMES,
+        allNotesWithFlats,
+        scales,
+        CHORD_LIB
+    };
+
     // --- Event Listener principale ---
     if (generateButton) {
         if (typeof generateSongArchitecture === "function") {
-            generateButton.addEventListener('click', generateSongArchitecture);
+            generateButton.addEventListener('click', () => generateSongArchitecture(helpers));
         } else {
             console.error("generateSongArchitecture function not found! Generation will not work.");
             generateButton.disabled = true;
@@ -165,52 +183,52 @@ document.addEventListener('DOMContentLoaded', () => {
     window.attachActionListenersGlobal = function() {
         const saveBtn = document.getElementById('saveSongButton');
         if (saveBtn && typeof handleSaveSong === "function") {
-            saveBtn.onclick = handleSaveSong;
+            saveBtn.onclick = () => handleSaveSong();
         }
 
         const singleTrackChordBtn = document.getElementById('downloadSingleTrackChordMidiButton');
         if (singleTrackChordBtn && typeof handleGenerateSingleTrackChordMidi === "function") {
-            singleTrackChordBtn.onclick = handleGenerateSingleTrackChordMidi;
+            singleTrackChordBtn.onclick = () => handleGenerateSingleTrackChordMidi(helpers);
         }
 
         const rhythmChordsBtn = document.getElementById('rhythmChordsButton');
         if (rhythmChordsBtn && typeof handleGenerateRhythmChords === "function") {
-            rhythmChordsBtn.onclick = handleGenerateRhythmChords;
+            rhythmChordsBtn.onclick = () => handleGenerateRhythmChords(helpers);
         }
 
         // Listener per il nuovo pulsante "Arpeggiator"
         const arpeggiatorBtn = document.getElementById('arpeggiatorButton'); // Usa il nuovo ID
         if (arpeggiatorBtn && typeof handleGenerateArpeggiator === "function") {
-            arpeggiatorBtn.onclick = handleGenerateArpeggiator;
+            arpeggiatorBtn.onclick = () => handleGenerateArpeggiator(helpers);
         } else if(arpeggiatorBtn) {
             console.warn("handleGenerateArpeggiator function not found for 'Arpeggiator' button.");
         }
 
         const melodyBtn = document.getElementById('generateMelodyButton');
         if (melodyBtn && typeof handleGenerateMelody === "function") {
-            melodyBtn.onclick = handleGenerateMelody;
+            melodyBtn.onclick = () => handleGenerateMelody(helpers);
         }
 
         const vocalBtn = document.getElementById('generateVocalLineButton');
         if (vocalBtn && typeof handleGenerateVocalLine === "function") {
-            vocalBtn.onclick = handleGenerateVocalLine;
+            vocalBtn.onclick = () => handleGenerateVocalLine(helpers);
         }
 
         const bassBtn = document.getElementById('generateBassLineButton');
         if (bassBtn && typeof handleGenerateBassLine === "function") {
-            bassBtn.onclick = handleGenerateBassLine;
+            bassBtn.onclick = () => handleGenerateBassLine(helpers);
         }
 
         const drumBtn = document.getElementById('generateDrumTrackButton');
         if (drumBtn && typeof handleGenerateDrumTrack === "function") {
-            drumBtn.onclick = handleGenerateDrumTrack;
+            drumBtn.onclick = () => handleGenerateDrumTrack(helpers);
         }
 
         document.querySelectorAll('.shape-select').forEach(selectElement => {
             const newSelect = selectElement.cloneNode(true);
             selectElement.parentNode.replaceChild(newSelect, selectElement);
             if (typeof handleShapeChange === "function") { // handleShapeChange è in app-ui-render.js
-                newSelect.addEventListener('change', handleShapeChange);
+                newSelect.addEventListener('change', (event) => handleShapeChange(event, helpers));
             }
         });
     };
