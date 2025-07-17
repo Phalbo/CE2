@@ -19,7 +19,7 @@ const MELODY_GENERATION_PARAMS = {
     shortNoteDurationTicks: TPQN_MELODY / 2, // Croma
     mediumNoteDurationTicks: TPQN_MELODY,   // Semiminima
     longNoteDurationTicks: TPQN_MELODY * 2, // Minima
-    restProbability: 0.05, // Probabilità di inserire una pausa (ridotta)
+    restProbability: 0.02, // Probabilità di inserire una pausa (ridotta)
     noteDensity: 0.8, // Fattore di densità delle note (0-1, aumentato)
     maxStepInterval: 4, // Massimo intervallo (in semitoni) per salti melodici comuni
     leapProbability: 0.2, // Probabilità di un salto melodico più ampio

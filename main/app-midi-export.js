@@ -196,6 +196,30 @@ function handleGenerateSingleTrackChordMidi() {
                     }
                 }
             });
+            if (lastChordName && chordMIDIEvents.length > 0 && chordMIDIEvents[chordMIDIEvents.length - 1].pitch.join(',') !== getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type).notes.map(noteName => NOTE_NAMES.indexOf(noteName) + 48).join(',')) {
+                const chordDefinition = CHORD_LIB[lastChordName] || (typeof getChordNotes === 'function' ? getChordNotes(getChordRootAndType(lastChordName).root, getChordRootAndType(lastChordName).type) : null);
+                if (chordDefinition && chordDefinition.notes && chordDefinition.notes.length > 0) {
+                    const midiNoteNumbers = chordDefinition.notes.map(noteName => {
+                        let note = noteName.charAt(0).toUpperCase() + noteName.slice(1);
+                        if (note.length > 1 && (note.charAt(1) === 'b')) { note = note.charAt(0) + 'b'; }
+                        let pitch = NOTE_NAMES.indexOf(note);
+                        if (pitch === -1) {
+                            const sharpMap = {"Db":"C#", "Eb":"D#", "Fb":"E", "Gb":"F#", "Ab":"G#", "Bb":"A#", "Cb":"B"};
+                            pitch = NOTE_NAMES.indexOf(sharpMap[noteName] || noteName);
+                        }
+                        return (pitch !== -1) ? pitch + 48 : null;
+                    }).filter(n => n !== null);
+
+                    if (midiNoteNumbers.length > 0) {
+                        chordMIDIEvents.push({
+                            pitch: midiNoteNumbers,
+                            duration: `T${Math.round(lastChordDuration)}`,
+                            startTick: lastChordStartTick,
+                            velocity: 60,
+                        });
+                    }
+                }
+            });
         }
     });
     const midiFileNameST = `${title.replace(/[^a-zA-Z0-9_]/g, '_')}_Pad.mid`;
