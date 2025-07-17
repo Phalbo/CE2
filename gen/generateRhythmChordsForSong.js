@@ -43,6 +43,7 @@ function generateRhythmChordsForSong(songData, helpers) {
             }
             const patternSteps = chosenPatternObject.steps;
 
+
             const { root, type } = getChordRootAndType(chordName);
             const chordNotes = getChordNotes(root, type).notes;
             const pitches = chordNotes.map(note => NOTE_NAMES.indexOf(note) + 48);

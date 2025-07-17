@@ -405,10 +405,12 @@ async function generateSongArchitecture(helpers) {
             let currentTickInSection = 0;
 
             sectionData.baseChords.forEach(chord => {
+
                 // Ensure the chord is a string before processing
                 const chordName = typeof chord === 'string' ? chord : 'C'; // Fallback chord
                 sectionData.mainChordSlots.push({
                     chordName: chordName,
+
                     effectiveStartTickInSection: currentTickInSection,
                     effectiveDurationTicks: ticksPerChord,
                     timeSignature: sectionData.timeSignature,
