@@ -271,7 +271,7 @@ function handleGenerateArpeggiator() {
                         durationTicks: slot.effectiveDurationTicks,
                         timeSignature: slot.timeSignature
                     };
-                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext);
+                    const eventsForThisSlot = generateArpeggioEvents(currentMidiData, CHORD_LIB, NOTE_NAMES, helpers, slotContext, sectionCache);
                     if (eventsForThisSlot) {
                         allArpeggioEvents.push(...eventsForThisSlot);
                     }

@@ -6,6 +6,7 @@ let currentSongDataForSave = null;
 let glossaryChordData = {};
 let CHORD_LIB = {};
 let currentMidiData = null; // Dati della canzone attualmente generata
+let sectionCache = {}; // Cache per le progressioni e altri dati delle sezioni
 let midiSectionTitleElement = null; // Elemento H3 per il titolo della sezione download MIDI
 
 
