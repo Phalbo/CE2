@@ -1,6 +1,7 @@
 // gen/generateRhythmChordsForSong.js
 
-function generateRhythmChordsForSong(songData, helpers, sectionCache) {
+function generateRhythmChordsForSong(songData, helpers) {
+    const { sectionCache } = helpers;
     const chordEvents = [];
     let lastEvent = null;
 
@@ -32,16 +33,19 @@ function generateRhythmChordsForSong(songData, helpers, sectionCache) {
                 return; // Skip this slot if no patterns are available
             }
 
+
             const patternWeights = patternsForTs.reduce((acc, p) => {
                 acc[p.name] = p.weight;
                 return acc;
             }, {});
+
 
             const chosenPatternName = getWeightedRandom(patternWeights);
             const chosenPatternObject = patternsForTs.find(p => p.name === chosenPatternName);
 
             if (!chosenPatternObject) {
                 console.error(`Could not find pattern object for name: ${chosenPatternName}`);
+
                 // Fallback to a simple rhythm if pattern not found
                 sectionChords.push({
                     pitch: pitches,
@@ -52,6 +56,7 @@ function generateRhythmChordsForSong(songData, helpers, sectionCache) {
                 return;
             }
             const patternSteps = chosenPatternObject.steps;
+
 
             const { root, type } = getChordRootAndType(chordName);
             const chordNotes = getChordNotes(root, type).notes;
