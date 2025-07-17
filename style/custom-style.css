@@ -1,0 +1,23 @@
+/* Colori specifici per i pulsanti di azione (tramite ID) */
+button#saveSongButton { background-color: var(--btn-save-bg); color: var(--text-on-accent-dark); border-color: var(--btn-save-hover-bg); }
+button#saveSongButton:hover { background-color: var(--btn-save-hover-bg); }
+button#downloadSingleTrackChordMidiButton { background-color: var(--btn-chords-pad-bg); color: var(--btn-chords-pad-text); border-color: var(--btn-chords-pad-hover-bg); }
+button#downloadSingleTrackChordMidiButton:hover { background-color: var(--btn-chords-pad-hover-bg); }
+button#rhythmChordsButton { background-color: var(--btn-chords-rhythm-bg); color: var(--btn-chords-rhythm-text); border-color: var(--btn-chords-rhythm-hover-bg); }
+button#rhythmChordsButton:hover { background-color: var(--btn-chords-rhythm-hover-bg); }
+button#arpeggiatorButton { background-color: var(--btn-arpeggiator-bg); color: var(--btn-arpeggiator-text); border-color: var(--btn-arpeggiator-hover-bg); }
+button#arpeggiatorButton:hover { background-color: var(--btn-arpeggiator-hover-bg); }
+button#generateMelodyButton { background-color: var(--btn-melody-bg); color: var(--text-on-accent-dark); border-color: var(--btn-melody-hover-bg); }
+button#generateMelodyButton:hover { background-color: var(--btn-melody-hover-bg); }
+button#generateVocalLineButton { background-color: var(--btn-vocal-bg); color: var(--text-on-accent-dark); border-color: var(--btn-vocal-hover-bg); }
+button#generateVocalLineButton:hover { background-color: var(--btn-vocal-hover-bg); }
+button#generateBassLineButton { background-color: var(--btn-bass-bg); color: var(--text-on-accent-dark); border-color: var(--btn-bass-hover-bg); }
+button#generateBassLineButton:hover { background-color: var(--btn-bass-hover-bg); }
+button#generateDrumTrackButton { background-color: var(--btn-drums-bg); color: var(--text-on-accent-dark); border-color: var(--btn-drums-hover-bg); }
+button#generateDrumTrackButton:hover { background-color: var(--btn-drums-hover-bg); }
+
+.action-buttons-container button:disabled {
+  background-color: var(--btn-disabled-bg) !important; color: var(--btn-disabled-text) !important;
+  cursor: not-allowed; transform: none; box-shadow: none;
+  border-color: var(--btn-disabled-bg) !important; filter: saturate(0.5);
+}

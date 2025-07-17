@@ -251,11 +251,11 @@ async function generateSongArchitecture() {
     songOutputDiv.innerHTML = '<p><em>Generating your sonic architecture...</em></p>';
     currentSongDataForSave = null; currentMidiData = {};
     glossaryChordData = {};
-    sectionCache = {};
+    sectionCache = {}; // Pulisce la cache globale all'inizio di ogni generazione
 
     if (midiSectionTitleElement) midiSectionTitleElement.style.display = 'none';
     const actionButtonIDs = [
-        'saveSongButton', 'downloadSingleTrackChordMidiButton', 'generateChordRhythmButton',
+        'saveSongButton', 'downloadSingleTrackChordMidiButton', 'rhythmChordsButton', 'arpeggiatorButton',
         'generateMelodyButton', 'generateVocalLineButton', 'generateBassLineButton', 'generateDrumTrackButton'
     ];
     actionButtonIDs.forEach(id => {
